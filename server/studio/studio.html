@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Mon studio · Collab Kit</title>
+<title>Mon studio · Ton Media Kit</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#6D071A">
 <link rel="icon" type="image/png" href="/brand/lab.png">
@@ -998,7 +998,7 @@ const BRAND={
   sn:""
 };
 
-/* Compte Collab Kit : prénom, email et dernier brouillon, injectés par le serveur */
+/* Compte Ton Media Kit : prénom, email et dernier brouillon, injectés par le serveur */
 const CK=/*@CK_BOOT*/null||{};
 const PRENOM=String(CK.name||'').trim().split(/\s+/)[0]||'';
 const LSKEY='ck_kit:'+(CK.email||'invite');
@@ -2119,7 +2119,7 @@ function brandBlocks(){
   const hl=document.getElementById('heroLinks');
   if(hl)hl.innerHTML=L.join('');
   const f=document.getElementById('licFoot');
-  if(f&&CK.email)f.textContent='Compte Collab Kit · '+CK.email;
+  if(f&&CK.email)f.textContent='Compte · '+CK.email;
 }
 function doneScreen(){
   const n=visibleSheets().length,r=NETS.filter(x=>(S['net_'+x.v]||'').trim()).length;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle } from '@lucide/vue'
 
-useSeoMeta({ title: 'Créer mon media kit · Collab Kit', robots: 'noindex' })
+useSeoMeta({ title: 'Créer mon media kit · Ton Media Kit', robots: 'noindex' })
 
 const cfg = useRuntimeConfig().public
 const { price } = useBrand()
@@ -82,7 +82,7 @@ async function pay() {
     name: form.name.trim(),
     email: form.email.trim(),
     phone: form.phone.replace(/\D/g, '') || undefined,
-    reason: 'Collab Kit · media kit',
+    reason: 'Ton Media Kit',
     data: JSON.stringify({ orderId: order.orderId })
   })
 }
@@ -113,7 +113,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
     <header class="mx-auto flex max-w-[1180px] items-center gap-3 px-4 py-5 sm:px-6">
       <NuxtLink to="/" class="flex items-center gap-2.5 rounded-lg" aria-label="Retour à l'accueil">
         <img src="/brand/lab.png" alt="" class="h-9 w-auto" width="49" height="36">
-        <span class="font-display text-[19px] font-bold">Collab Kit</span>
+        <span class="font-display text-[19px] font-bold">Ton Media Kit</span>
       </NuxtLink>
       <NuxtLink to="/" class="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-[14px] font-semibold text-ink/70 hover:text-ink">
         <ArrowLeft :size="16" aria-hidden="true" /> Retour
@@ -182,7 +182,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             <div class="w-[96px] shrink-0 rotate-[-4deg]"><KitMini color="#6D071A" /></div>
             <div>
               <p class="text-[11px] font-bold uppercase tracking-[.14em] text-muted-strong">Ta commande</p>
-              <p class="mt-1 font-display text-[22px] leading-tight font-bold">Collab Kit · accès complet</p>
+              <p class="mt-1 font-display text-[22px] leading-tight font-bold">Ton Media Kit · accès complet</p>
               <p class="mt-1 text-[13.5px] text-muted-strong">par {{ cfg.brand.nom }}</p>
             </div>
           </div>

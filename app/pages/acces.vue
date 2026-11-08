@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, MailCheck, LoaderCircle } from '@lucide/vue'
 
-useSeoMeta({ title: 'Retrouver mon media kit · Collab Kit', robots: 'noindex' })
+useSeoMeta({ title: 'Retrouver mon media kit · Ton Media Kit', robots: 'noindex' })
 
 const route = useRoute()
 const { data: session } = await useFetch<{ ok: boolean, name?: string }>('/api/session', { key: 'session' })
@@ -30,7 +30,7 @@ async function send() {
     <header class="mx-auto flex w-full max-w-[1180px] items-center gap-3 px-4 py-5 sm:px-6">
       <NuxtLink to="/" class="flex items-center gap-2.5 rounded-lg" aria-label="Retour à l'accueil">
         <img src="/brand/lab.png" alt="" class="h-9 w-auto" width="49" height="36">
-        <span class="font-display text-[19px] font-bold">Collab Kit</span>
+        <span class="font-display text-[19px] font-bold">Ton Media Kit</span>
       </NuxtLink>
       <NuxtLink to="/" class="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-[14px] font-semibold text-ink/70 hover:text-ink">
         <ArrowLeft :size="16" aria-hidden="true" /> Accueil

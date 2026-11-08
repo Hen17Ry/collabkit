@@ -1,7 +1,7 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Collab Kit · Ton media kit en dix minutes',
-  ogTitle: 'Collab Kit · Ton media kit en dix minutes',
+  title: 'Ton Media Kit · Prêt en dix minutes, sans page blanche',
+  ogTitle: 'Ton Media Kit · Prêt en dix minutes, sans page blanche',
   description: "Une marque t'écrit et te demande ton media kit ? Crée-le en dix minutes, sans page blanche. Un outil de Lys Sama, prolongement de la série Du Lab à la Collab.",
   ogDescription: "Le document qu'une marque te réclame, prêt à envoyer en PDF. Tarifs en FCFA, liens cliquables.",
   ogImage: '/brand/lab.png'

@@ -1,13 +1,13 @@
-# Collab Kit
+# Ton Media Kit
 
-> Nom temporaire. Plateforme qui vend et livre l'outil de media kit créé par **Lys Sama** (Mélyssa K. COSSOU), prolongement de sa série de vidéos **« Du Lab à la Collab »**.
+> Plateforme qui vend et livre l'outil de media kit créé par **Lys Sama** (Mélyssa K. COSSOU), prolongement de sa série de vidéos **« Du Lab à la Collab »**.
 
 ## Le but
 
 Une marque écrit à une créatrice débutante, elle est intéressée, et elle demande : « tu peux nous envoyer ton media kit et tes tarifs ? ».
 Trois jours passent, le document n'existe toujours pas, et la marque part avec quelqu'un d'autre. Ce n'est pas un problème de talent, c'est un problème de document.
 
-Collab Kit règle ça : en une dizaine de minutes, la créatrice construit un media kit A4 professionnel sans partir d'une page blanche.
+Ton Media Kit règle ça : en une dizaine de minutes, la créatrice construit un media kit A4 professionnel sans partir d'une page blanche.
 Elle choisit dans des listes, l'outil rédige les phrases (positionnement, comparaisons de chiffres, arguments) et met tout en page.
 Elle repart avec un PDF prêt à envoyer, liens cliquables inclus, tarifs en FCFA.
 

@@ -36,7 +36,7 @@ useReveal(root)
           <div class="rounded-[var(--radius-bubble-lg)] bg-white p-6 shadow-[0_30px_70px_rgba(46,2,9,.22)] sm:p-9">
             <div class="flex flex-wrap items-baseline justify-between gap-4">
               <div>
-                <p class="text-[11px] font-bold uppercase tracking-[.14em] text-muted-strong">Collab Kit · accès complet</p>
+                <p class="text-[11px] font-bold uppercase tracking-[.14em] text-muted-strong">Ton Media Kit · accès complet</p>
                 <p class="mt-2 font-display text-[clamp(48px,6vw,72px)] leading-none font-bold tracking-[-.03em] text-noir">{{ fcfa(price).replace(' FCFA', '') }}<span class="ml-2 font-sans text-[18px] font-bold tracking-normal text-muted-strong">FCFA</span></p>
               </div>
               <span class="rounded-full bg-rose px-3 py-1.5 text-[12px] font-bold text-bordeaux">Paiement unique</span>

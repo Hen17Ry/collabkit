@@ -32,10 +32,10 @@ watch(open, v => { document.documentElement.style.overflow = v ? 'hidden' : '' }
         :class="scrolled ? 'glass rounded-[var(--radius-bubble)]' : 'border border-transparent'"
         aria-label="Navigation principale"
       >
-        <a href="#top" class="flex items-center gap-2.5 rounded-lg pr-2" aria-label="Collab Kit, retour en haut">
+        <a href="#top" class="flex items-center gap-2.5 rounded-lg pr-2" aria-label="Ton Media Kit, retour en haut">
           <img src="/brand/lab.png" alt="" class="h-9 w-auto" width="49" height="36">
           <span class="leading-none">
-            <span class="block font-display text-[19px] font-bold tracking-[-.02em]">Collab Kit</span>
+            <span class="block font-display text-[19px] font-bold tracking-[-.02em]">Ton Media Kit</span>
             <span class="mt-0.5 block text-[9.5px] font-bold uppercase tracking-[.16em] text-muted-strong">par Lys Sama</span>
           </span>
         </a>

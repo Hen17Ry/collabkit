@@ -9,7 +9,7 @@ const year = new Date().getFullYear()
       <div class="flex items-center gap-3">
         <img src="/brand/lab.png" alt="" class="h-11 w-auto" width="60" height="44" loading="lazy">
         <p class="text-[13.5px] leading-snug text-muted-strong">
-          <b class="font-display text-[16px] text-ink">Collab Kit</b><br>
+          <b class="font-display text-[16px] text-ink">Ton Media Kit</b><br>
           Le prolongement de la série « {{ brand.serie }} » de {{ brand.nom }}.
         </p>
       </div>

@@ -56,14 +56,14 @@ ${o.cta ? `<p style="margin:26px 0 6px"><a href="${o.cta.href}" style="display:i
 <p style="margin:10px 0 0;font-size:12px;color:#7C7478;word-break:break-all">Ou copie ce lien : ${o.cta.href}</p>` : ''}
 </td></tr>
 <tr><td style="padding:20px 8px;font-size:12.5px;line-height:1.5;color:#7C7478">${o.foot || ''}
-Collab Kit, le prolongement de la série « ${esc(brand.serie)} » de ${esc(brand.nom)}.<br>Une question ? Réponds simplement à cet email ou écris sur WhatsApp.</td></tr>
+Ton Media Kit, le prolongement de la série « ${esc(brand.serie)} » de ${esc(brand.nom)}.<br>Une question ? Réponds simplement à cet email ou écris sur WhatsApp.</td></tr>
 </table></td></tr></table></body></html>`
 }
 
 export function accessEmail(name: string, link: string) {
   const first = esc(name.split(' ')[0] || name)
   return {
-    subject: 'Ton accès à Collab Kit',
+    subject: 'Ton accès est prêt',
     html: layout({
       preheader: 'Ton lien personnel pour créer et modifier ton media kit.',
       kicker: 'Paiement confirmé',

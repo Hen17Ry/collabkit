@@ -1,11 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// Stockage des commandes, accès et brouillons :
-// Upstash Redis en production (Vercel), fichiers locaux sinon.
-const db = process.env.UPSTASH_REDIS_REST_URL
-  ? { driver: 'upstash' }
-  : { driver: 'fs', base: './.data/db' }
-
 export default defineNuxtConfig({
   compatibilityDate: '2026-11-01',
   devtools: { enabled: false },
@@ -16,7 +10,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'fr' },
-      title: 'Collab Kit · Ton media kit en dix minutes',
+      title: 'Ton Media Kit · Prêt en dix minutes, sans page blanche',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', content: '#6D071A' },
@@ -33,7 +27,7 @@ export default defineNuxtConfig({
     kkiapaySecretKey: '',
     kkiapayWebhookSecret: '',
     resendApiKey: '',
-    mailFrom: 'Collab Kit <onboarding@resend.dev>',
+    mailFrom: 'Ton Media Kit <onboarding@resend.dev>',
     public: {
       siteUrl: 'http://localhost:3000',
       priceFcfa: 2500,
@@ -51,7 +45,8 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    storage: { db },
+    // fichiers locaux par défaut ; Upstash Redis branché au démarrage si configuré (server/plugins/storage.ts)
+    storage: { db: { driver: 'fs', base: './.data/db' } },
     serverAssets: [{ baseName: 'studio', dir: './studio' }]
   }
 })
