@@ -67,7 +67,7 @@ Pour tester tout le parcours sans KKiaPay ni Resend, mets `NUXT_PUBLIC_FAKE_PAYM
 1. **KKiaPay** : récupère les clés (publique, privée, secrète) dans le tableau de bord. Commence avec `NUXT_PUBLIC_KKIAPAY_SANDBOX=true`, puis passe à `false`.
    Déclare le webhook `https://ton-domaine/api/kkiapay/webhook` avec un secret, et mets ce secret dans `NUXT_KKIAPAY_WEBHOOK_SECRET`.
 2. **Resend** : crée une clé API et vérifie ton domaine d'envoi, puis renseigne `NUXT_RESEND_API_KEY` et `NUXT_MAIL_FROM`.
-3. **Upstash Redis** (Vercel > Storage, ou upstash.com) : renseigne `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN`. Sans ça, les commandes ne sont pas conservées sur Vercel.
+3. **Upstash Redis** : dans Vercel > Storage, crée une base Upstash et connecte-la au projet (les variables `KV_REST_API_URL` / `KV_REST_API_TOKEN` sont ajoutées toutes seules). Depuis upstash.com, renseigne plutôt `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN`. Sans ça, les commandes ne sont pas conservées sur Vercel.
 4. Renseigne `NUXT_PUBLIC_SITE_URL` (sert aux liens des emails) et `NUXT_PUBLIC_PRICE_FCFA`.
 5. Déploie (Vercel détecte Nuxt tout seul).
 
