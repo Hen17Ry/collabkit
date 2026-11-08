@@ -1,6 +1,6 @@
 export function useBrand() {
   const c = useRuntimeConfig().public
-  const price = Number(c.priceFcfa) || 5000
+  const price = Number(c.priceFcfa) || 2500
   const waHref = (msg?: string) => {
     const v = String(c.brand.wa || '').trim()
     if (!v) return ''

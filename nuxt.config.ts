@@ -36,7 +36,7 @@ export default defineNuxtConfig({
     mailFrom: 'Collab Kit <onboarding@resend.dev>',
     public: {
       siteUrl: 'http://localhost:3000',
-      priceFcfa: 5000,
+      priceFcfa: 2500,
       kkiapayPublicKey: '',
       kkiapaySandbox: true,
       // Paiement simulé : uniquement en développement, ignoré en production.

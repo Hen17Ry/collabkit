@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) {
     throw createError({ statusCode: 422, statusMessage: 'Formulaire incomplet', data: { issues: z.flattenError(parsed.error).fieldErrors } })
   }
-  const amount = Number(useRuntimeConfig().public.priceFcfa) || 5000
+  const amount = Number(useRuntimeConfig().public.priceFcfa) || 2500
   const order: Order = { id: newId(), ...parsed.data, amount, status: 'pending', createdAt: Date.now() }
   await saveOrder(order)
   return { orderId: order.id, amount }
