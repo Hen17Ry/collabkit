@@ -23,7 +23,10 @@ export default defineEventHandler(async (event) => {
   const owner = await txOwner(transactionId)
   if (owner && owner !== orderId) throw createError({ statusCode: 409, statusMessage: 'Transaction déjà utilisée' })
 
-  if (!(fakePaymentAllowed() && transactionId.startsWith('dev-'))) {
+  const skip = (fakePaymentAllowed() && transactionId.startsWith('dev-')) || trustWidgetInSandbox()
+  if (trustWidgetInSandbox()) console.warn('[kkiapay] mode test sans clé privée : transaction non revérifiée', transactionId)
+  if (!skip) {
+    if (!canVerify()) throw createError({ statusCode: 503, statusMessage: 'Paiement en cours de configuration' })
     let tx
     try { tx = await verifyTransaction(transactionId) } catch (e) {
       console.error('[kkiapay] vérification', e)

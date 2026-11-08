@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   if (!secret || getHeader(event, 'x-kkiapay-secret') !== secret) {
     throw createError({ statusCode: 401, statusMessage: 'Signature invalide' })
   }
-  const body = await readBody<{ transactionId?: string, isPaymentSucces?: boolean, event?: string, stateData?: unknown }>(event)
+  const body = await readBody<{ transactionId?: string, isPaymentSucces?: boolean, event?: string, stateData?: unknown, amount?: number }>(event)
   if (!body?.transactionId || body.event !== 'transaction.success' || !body.isPaymentSucces) return { ok: true }
 
   let orderId = ''
@@ -21,8 +21,11 @@ export default defineEventHandler(async (event) => {
   const owner = await txOwner(body.transactionId)
   if (owner && owner !== order.id) return { ok: true }
 
-  const tx = await verifyTransaction(body.transactionId).catch(() => null)
-  if (!tx || tx.status !== 'SUCCESS' || Number(tx.amount) < order.amount) return { ok: true }
+  // Avec la clé privée on revérifie auprès de KKiaPay ; sans elle, l'en-tête secret authentifie déjà l'envoi.
+  if (canVerify()) {
+    const tx = await verifyTransaction(body.transactionId).catch(() => null)
+    if (!tx || tx.status !== 'SUCCESS' || Number(tx.amount) < order.amount) return { ok: true }
+  } else if (Number(body.amount) < order.amount) return { ok: true }
 
   const { order: paid, created } = await grantAccess(order, body.transactionId)
   if (created) await notifyAccess(paid)
