@@ -18,7 +18,7 @@ Elle repart avec un PDF prêt à envoyer, liens cliquables inclus, tarifs en FCF
 3. **La vérification** : le serveur revérifie la transaction auprès de KKiaPay (statut et montant) avant d'ouvrir l'accès. Un webhook rattrape les paiements dont la page a été fermée trop tôt.
 4. **L'accès** : un email avec un lien personnel (lien magique) est envoyé. Il permet de revenir sur n'importe quel appareil. `/acces` renvoie ce lien si on l'a perdu.
 5. **Le studio** (`/studio`) : l'outil de Lys Sama, repris fidèlement. Le brouillon est enregistré sur l'appareil **et** dans le compte.
-6. **La fin** : « Recevoir par email » génère le PDF et l'envoie en pièce jointe (Resend). Téléchargement PDF et JPG toujours possibles.
+6. **La fin** : « Recevoir par email » génère le PDF et l'envoie en pièce jointe (SMTP). Téléchargement PDF et JPG toujours possibles.
 
 ## Ce qui a changé par rapport à l'outil d'origine
 
@@ -60,13 +60,14 @@ cp .env.example .env
 npm run dev
 ```
 
-Pour tester tout le parcours sans KKiaPay ni Resend, mets `NUXT_PUBLIC_FAKE_PAYMENT=true` dans `.env` : le paiement est simulé (en développement uniquement, jamais en production) et les emails sont déposés dans `.data/outbox/` avec le PDF.
+Pour tester tout le parcours sans KKiaPay ni SMTP, mets `NUXT_PUBLIC_FAKE_PAYMENT=true` dans `.env` : le paiement est simulé (en développement uniquement, jamais en production) et les emails sont déposés dans `.data/outbox/` avec le PDF.
 
 ## Mise en production
 
 1. **KKiaPay** : récupère les clés (publique, privée, secrète) dans le tableau de bord. Commence avec `NUXT_PUBLIC_KKIAPAY_SANDBOX=true`, puis passe à `false`.
    Déclare le webhook `https://ton-domaine/api/kkiapay/webhook` avec un secret, et mets ce secret dans `NUXT_KKIAPAY_WEBHOOK_SECRET`.
-2. **Resend** : crée une clé API et vérifie ton domaine d'envoi, puis renseigne `NUXT_RESEND_API_KEY` et `NUXT_MAIL_FROM`.
+2. **Emails (SMTP)** : renseigne `NUXT_SMTP_HOST`, `NUXT_SMTP_PORT`, `NUXT_SMTP_USER`, `NUXT_SMTP_PASS`.
+   Avec Gmail : `smtp.gmail.com`, port `465`, et un mot de passe d'application (la validation en deux étapes doit être active). `NUXT_MAIL_FROM` est facultatif.
 3. **Upstash Redis** : dans Vercel > Storage, crée une base Upstash et connecte-la au projet (les variables `KV_REST_API_URL` / `KV_REST_API_TOKEN` sont ajoutées toutes seules). Depuis upstash.com, renseigne plutôt `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN`. Sans ça, les commandes ne sont pas conservées sur Vercel.
 4. Renseigne `NUXT_PUBLIC_SITE_URL` (sert aux liens des emails) et `NUXT_PUBLIC_PRICE_FCFA`.
 5. Déploie (Vercel détecte Nuxt tout seul).

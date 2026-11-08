@@ -26,8 +26,12 @@ export default defineNuxtConfig({
     kkiapayPrivateKey: '',
     kkiapaySecretKey: '',
     kkiapayWebhookSecret: '',
-    resendApiKey: '',
-    mailFrom: 'Ton Media Kit <onboarding@resend.dev>',
+    // envoi des emails par SMTP (Gmail : smtp.gmail.com, port 465, mot de passe d'application)
+    smtpHost: '',
+    smtpPort: 465,
+    smtpUser: '',
+    smtpPass: '',
+    mailFrom: '',
     public: {
       siteUrl: 'http://localhost:3000',
       priceFcfa: 2500,

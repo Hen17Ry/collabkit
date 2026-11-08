@@ -1,16 +1,34 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
+import type { Transporter } from 'nodemailer'
 import { mkdir, writeFile } from 'node:fs/promises'
 
 type Attachment = { filename: string, content: Buffer }
 type Mail = { to: string, subject: string, html: string, text: string, attachments?: Attachment[] }
 
+let transport: Transporter | null = null
+function smtp() {
+  const c = useRuntimeConfig()
+  if (!c.smtpHost || !c.smtpUser || !c.smtpPass) return null
+  if (!transport) {
+    const port = Number(c.smtpPort) || 465
+    transport = nodemailer.createTransport({
+      host: c.smtpHost,
+      port,
+      secure: port === 465,
+      auth: { user: c.smtpUser, pass: c.smtpPass }
+    })
+  }
+  return transport
+}
+
 /**
- * Envoie un email via Resend.
- * Sans clé Resend en développement, l'email est déposé dans .data/outbox pour pouvoir le relire.
+ * Envoie un email par SMTP (Gmail ou tout autre fournisseur).
+ * Sans SMTP en développement, l'email est déposé dans .data/outbox pour pouvoir le relire.
  */
 export async function sendMail(m: Mail) {
   const c = useRuntimeConfig()
-  if (!c.resendApiKey) {
+  const t = smtp()
+  if (!t) {
     if (!import.meta.dev) throw createError({ statusCode: 500, statusMessage: 'Envoi d\'email non configuré' })
     const dir = '.data/outbox'
     await mkdir(dir, { recursive: true })
@@ -20,20 +38,20 @@ export async function sendMail(m: Mail) {
     console.info(`[mail] (dev) « ${m.subject} » → ${m.to} · déposé dans ${dir}`)
     return { id: 'dev-' + stamp }
   }
-  const resend = new Resend(c.resendApiKey)
-  const { data, error } = await resend.emails.send({
-    from: c.mailFrom,
-    to: m.to,
-    subject: m.subject,
-    html: m.html,
-    text: m.text,
-    attachments: m.attachments?.map(a => ({ filename: a.filename, content: a.content }))
-  })
-  if (error) {
-    console.error('[mail] Resend', error)
+  try {
+    const info = await t.sendMail({
+      from: c.mailFrom || `Ton Media Kit <${c.smtpUser}>`,
+      to: m.to,
+      subject: m.subject,
+      html: m.html,
+      text: m.text,
+      attachments: m.attachments?.map(a => ({ filename: a.filename, content: a.content, contentType: 'application/pdf' }))
+    })
+    return { id: info.messageId }
+  } catch (e) {
+    console.error('[mail] SMTP', e)
     throw createError({ statusCode: 502, statusMessage: 'L\'email n\'a pas pu partir' })
   }
-  return data
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))
