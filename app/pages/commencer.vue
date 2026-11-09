@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle } from '@lucide/vue'
+import { toEur } from '~~/shared/pricing'
+import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle, Smartphone, CreditCard } from '@lucide/vue'
 
 useSeoMeta({ title: 'Créer mon media kit · Ton Media Kit', robots: 'noindex' })
 
 const cfg = useRuntimeConfig().public
-const { price } = useBrand()
+const { price, normalPrice, promo, promoEnd, priceEur } = useBrand()
 
 const form = reactive({ name: '', email: '', phone: '' })
+// « xof » : Mobile Money ou carte, en FCFA ; « eur » : carte uniquement, débitée en euros par la banque
+const currency = ref<'xof' | 'eur'>('xof')
 const errors = reactive<Record<string, string>>({})
 const state = ref<'idle' | 'creating' | 'paying' | 'verifying' | 'done'>('idle')
 const message = ref('')
@@ -14,7 +17,7 @@ const pending = ref<{ orderId: string, transactionId: string } | null>(null)
 
 const busy = computed(() => state.value !== 'idle')
 const label = computed(() => ({
-  idle: `Payer ${fcfa(price)}`,
+  idle: currency.value === 'eur' ? `Payer ${eur(priceEur)} par carte` : `Payer ${fcfa(price)}`,
   creating: 'Préparation…',
   paying: 'Paiement en cours…',
   verifying: 'Vérification du paiement…',
@@ -24,7 +27,7 @@ const label = computed(() => ({
 function validate() {
   errors.name = form.name.trim().length < 2 ? 'Ton prénom, s\'il te plaît.' : ''
   errors.email = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim()) ? '' : 'Cette adresse email ne semble pas valide.'
-  errors.phone = form.phone && form.phone.replace(/\D/g, '').length < 8 ? 'Numéro incomplet.' : ''
+  errors.phone = currency.value === 'xof' && form.phone && form.phone.replace(/\D/g, '').length < 8 ? 'Numéro incomplet.' : ''
   return !errors.name && !errors.email && !errors.phone
 }
 
@@ -53,7 +56,7 @@ async function pay() {
   state.value = 'creating'
   let order: { orderId: string, amount: number }
   try {
-    order = await $fetch('/api/orders', { method: 'POST', body: { ...form } })
+    order = await $fetch('/api/orders', { method: 'POST', body: { ...form, phone: currency.value === 'xof' ? form.phone : '', currency: currency.value } })
   } catch (e: any) {
     state.value = 'idle'
     message.value = e?.data?.statusMessage || 'Impossible de préparer la commande. Vérifie ta connexion.'
@@ -81,8 +84,10 @@ async function pay() {
     sandbox: !!cfg.kkiapaySandbox,
     name: form.name.trim(),
     email: form.email.trim(),
-    phone: form.phone.replace(/\D/g, '') || undefined,
+    phone: (currency.value === 'xof' && form.phone.replace(/\D/g, '')) || undefined,
     reason: 'Ton Media Kit',
+    // en euros : seulement la carte bancaire, quel que soit le pays
+    ...(currency.value === 'eur' ? { paymentMethods: ['card'] as any } : {}),
     data: JSON.stringify({ orderId: order.orderId })
   })
 }
@@ -103,6 +108,7 @@ onBeforeUnmount(async () => {
   k?.removeKkiapayListener('failed')
 })
 
+const toEurUi = toEur
 const steps = ['Tes infos', 'Paiement', 'Ton studio']
 const current = computed(() => state.value === 'idle' || state.value === 'creating' ? 0 : state.value === 'paying' ? 1 : 2)
 const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquables', 'Envoi par email', 'Modifications illimitées']
@@ -120,7 +126,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
       </NuxtLink>
     </header>
 
-    <main class="mx-auto grid max-w-[1180px] gap-10 px-4 pt-4 pb-20 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:pt-10">
+    <main class="mx-auto grid grid-cols-1 max-w-[1180px] gap-10 px-4 pt-4 pb-20 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:pt-10">
       <section aria-labelledby="pay-titre">
         <ol class="flex gap-2" aria-label="Étapes">
           <li v-for="(s, i) in steps" :key="s" class="flex-1" :aria-current="i === current ? 'step' : undefined">
@@ -150,7 +156,32 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             <p id="h-email" class="mt-1.5 text-[13.5px] text-muted-strong">On t'y envoie ton lien d'accès, puis ton media kit en PDF.</p>
             <p v-if="errors.email" id="e-email" class="mt-1 text-[13.5px] font-semibold text-err">{{ errors.email }}</p>
           </div>
-          <div>
+          <fieldset>
+            <legend class="label">Tu paies</legend>
+            <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <label
+                v-for="o in ([
+                  { v: 'xof', t: 'En FCFA', d: 'Mobile Money ou carte', icon: Smartphone },
+                  { v: 'eur', t: 'En euros', d: 'Carte Visa ou Mastercard', icon: CreditCard }
+                ] as const)" :key="o.v"
+                class="relative flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border bg-white px-4 py-3 transition"
+                :class="currency === o.v ? 'border-bordeaux shadow-[0_0_0_3px_rgba(109,7,26,.1)]' : 'border-line hover:border-bordeaux/40'"
+              >
+                <input v-model="currency" type="radio" name="currency" :value="o.v" class="sr-only" :disabled="busy">
+                <span class="grid size-10 shrink-0 place-items-center rounded-full" :class="currency === o.v ? 'bg-bordeaux text-white' : 'bg-rose text-bordeaux'">
+                  <component :is="o.icon" :size="18" aria-hidden="true" />
+                </span>
+                <span class="leading-tight">
+                  <b class="block text-[15px]">{{ o.t }} · {{ o.v === 'eur' ? eur(priceEur) : fcfa(price) }}</b>
+                  <span class="text-[13px] text-muted-strong">{{ o.d }}</span>
+                </span>
+              </label>
+            </div>
+            <p v-if="currency === 'eur'" class="mt-2.5 text-[13.5px] leading-snug text-muted-strong">
+              Ta banque te débite {{ eur(priceEur) }}, l'équivalent exact de {{ fcfa(price) }} (parité fixe du franc CFA). Selon ta banque, de petits frais de paiement à l'étranger peuvent s'ajouter.
+            </p>
+          </fieldset>
+          <div v-if="currency === 'xof'">
             <label for="f-phone" class="label">Ton numéro Mobile Money <span class="font-semibold normal-case tracking-normal text-muted">(facultatif)</span></label>
             <input id="f-phone" v-model="form.phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="+229 01 00 00 00 00" maxlength="24" :aria-invalid="!!errors.phone" aria-describedby="h-phone e-phone" :disabled="busy">
             <p id="h-phone" class="mt-1.5 text-[13.5px] text-muted-strong">Pour pré-remplir le paiement.</p>
@@ -170,7 +201,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             {{ label }}
           </button>
           <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[13px] text-muted-strong">
-            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par KKiaPay · Mobile Money ou carte
+            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par KKiaPay · {{ currency === 'eur' ? 'carte bancaire' : 'Mobile Money ou carte' }}
           </p>
           <p v-if="cfg.fakePayment" class="rounded-xl bg-orange/10 px-3 py-2 text-center text-[12.5px] font-semibold text-orange">Mode test : le paiement est simulé.</p>
         </form>
@@ -191,11 +222,19 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
               <span class="grid size-5 shrink-0 place-items-center rounded-full bg-bordeaux text-white"><Check :size="12" :stroke-width="3" aria-hidden="true" /></span>{{ x }}
             </li>
           </ul>
-          <div class="mt-6 flex items-baseline justify-between border-t hairline pt-5">
+          <div class="mt-6 flex items-baseline justify-between gap-3 border-t hairline pt-5">
             <span class="text-[15px] font-semibold">Total</span>
-            <span class="font-display text-[30px] font-bold">{{ fcfa(price) }}</span>
+            <span class="text-right">
+              <s v-if="promo" class="mr-2 text-[15px] font-semibold text-muted-strong">{{ currency === 'eur' ? eur(toEurUi(normalPrice)) : fcfa(normalPrice) }}</s>
+              <span class="font-display text-[30px] font-bold">{{ currency === 'eur' ? eur(priceEur) : fcfa(price) }}</span>
+            </span>
           </div>
-          <p class="mt-1 text-right text-[12.5px] text-muted-strong">Paiement unique, sans abonnement</p>
+          <p class="mt-1 text-right text-[12.5px] text-muted-strong">
+            Paiement unique, sans abonnement<template v-if="currency === 'eur'"> · soit {{ fcfa(price) }}</template>
+          </p>
+          <p v-if="promo" class="mt-4 rounded-2xl bg-orange/10 px-4 py-3 text-[13.5px] leading-snug text-[#8A3709]">
+            <b>Prix de lancement</b> jusqu'au {{ promoEnd }}, au lieu de {{ fcfa(normalPrice) }}.
+          </p>
         </div>
       </aside>
     </main>

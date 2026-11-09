@@ -47,7 +47,7 @@ useReveal(root)
 <template>
   <section id="comment" ref="root" aria-labelledby="builder-titre" class="relative py-24 sm:py-32">
     <div class="mx-auto max-w-[1240px] px-4 sm:px-6">
-      <div class="grid items-end gap-6 lg:grid-cols-2">
+      <div class="grid grid-cols-1 items-end gap-6 lg:grid-cols-2">
         <div>
           <p data-reveal class="kicker">Chapitre 4 · La méthode</p>
           <h2 id="builder-titre" data-reveal="1" class="mt-5 font-display text-[clamp(34px,5vw,62px)] leading-[1.02] font-bold tracking-[-.03em] text-noir">
@@ -59,7 +59,7 @@ useReveal(root)
         </p>
       </div>
 
-      <div class="mt-14 grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
+      <div class="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-[1.25fr_.75fr]">
         <!-- phrase de positionnement -->
         <div data-reveal class="glass rounded-[var(--radius-bubble-lg)] p-5 sm:p-8">
           <div class="flex flex-col gap-5">

@@ -5,6 +5,7 @@ export type Order = {
   name: string
   email: string
   phone?: string
+  currency?: 'xof' | 'eur'
   amount: number
   status: 'pending' | 'paid'
   transactionId?: string

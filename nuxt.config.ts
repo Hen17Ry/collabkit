@@ -34,7 +34,10 @@ export default defineNuxtConfig({
     mailFrom: '',
     public: {
       siteUrl: 'http://localhost:3000',
-      priceFcfa: 2500,
+      // prix normal, et prix de lancement valable jusqu'à promoUntil (heure de Cotonou)
+      priceFcfa: 5000,
+      promoPriceFcfa: 3500,
+      promoUntil: '2027-01-01T00:00:00+01:00',
       kkiapayPublicKey: '',
       kkiapaySandbox: true,
       // Paiement simulé : uniquement en développement, ignoré en production.

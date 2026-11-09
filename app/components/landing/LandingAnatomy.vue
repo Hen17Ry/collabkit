@@ -39,7 +39,7 @@ useReveal(root)
         </p>
       </div>
 
-      <div class="mt-14 grid gap-10 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:gap-20">
+      <div class="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:gap-20">
         <div class="anat-sticky sticky top-[68px] z-10 -mx-4 self-start bg-paper px-4 pt-3 pb-4 lg:top-28 lg:mx-0 lg:bg-transparent lg:p-0">
           <div class="mx-auto w-[min(46vw,200px)] lg:w-full lg:max-w-[460px]">
             <KitMini :focus="focus" />

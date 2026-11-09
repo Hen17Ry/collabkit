@@ -2,7 +2,7 @@
 import { ArrowRight } from '@lucide/vue'
 
 // Barre d'action en bas d'écran sur téléphone, après le premier écran.
-const { price } = useBrand()
+const { price, normalPrice, promo } = useBrand()
 const show = ref(false)
 function onScroll() {
   const y = window.scrollY
@@ -17,7 +17,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   <Transition name="bar">
     <div v-if="show" class="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(12px,env(safe-area-inset-bottom))] sm:hidden">
       <div class="glass flex items-center gap-3 rounded-[var(--radius-bubble)] p-2.5 pl-4">
-        <p class="text-[13px] leading-tight"><b class="block font-display text-[16px]">{{ fcfa(price) }}</b><span class="text-muted-strong">paiement unique</span></p>
+        <p class="text-[13px] leading-tight"><b class="block font-display text-[16px]">{{ fcfa(price) }} <s v-if="promo" class="font-sans text-[12px] font-semibold text-muted-strong">{{ fcfa(normalPrice) }}</s></b><span class="text-muted-strong">{{ promo ? 'prix de lancement' : 'paiement unique' }}</span></p>
         <NuxtLink to="/commencer" class="btn btn-main ml-auto !min-h-12 !px-5">Créer le mien <ArrowRight :size="16" aria-hidden="true" /></NuxtLink>
       </div>
     </div>

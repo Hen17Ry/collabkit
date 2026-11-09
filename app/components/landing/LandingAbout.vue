@@ -9,7 +9,7 @@ useReveal(root)
 <template>
   <section ref="root" aria-labelledby="about-titre" class="relative py-24 sm:py-32">
     <div class="mx-auto max-w-[1240px] px-4 sm:px-6">
-      <div class="grid gap-12 border-t hairline pt-16 lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
+      <div class="grid grid-cols-1 gap-12 border-t hairline pt-16 lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
         <div data-reveal>
           <img src="/brand/lys.png" alt="Lys Sama, création de contenu" class="h-24 w-auto" width="139" height="96" loading="lazy">
           <div class="mt-8 flex flex-wrap gap-2.5">
@@ -40,7 +40,7 @@ useReveal(root)
       <!-- appel final -->
       <div data-reveal class="grain relative mt-24 overflow-hidden rounded-[var(--radius-bubble-lg)] bg-bordeaux px-6 py-14 text-white sm:px-14 sm:py-20">
         <div class="pointer-events-none absolute -right-24 -bottom-32 size-[420px] rounded-full bg-orange/30 blur-[90px]" aria-hidden="true" />
-        <div class="relative grid items-end gap-10 lg:grid-cols-[1.3fr_.7fr]">
+        <div class="relative grid grid-cols-1 items-end gap-10 lg:grid-cols-[1.3fr_.7fr]">
           <h2 class="font-display text-[clamp(34px,5.4vw,68px)] leading-[1] font-bold tracking-[-.03em]">
             La prochaine marque qui t'écrit, <span class="italic text-[#F4B9C6]">tu lui réponds le jour même.</span>
           </h2>

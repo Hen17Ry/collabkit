@@ -29,7 +29,7 @@ useReveal(root)
         </p>
       </div>
 
-      <ol class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ol class="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <li
           v-for="(s, i) in steps" :key="s.t" :data-reveal="i"
           class="group glass relative flex flex-col overflow-hidden rounded-[var(--radius-bubble-lg)] p-6 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(46,2,9,.12)]"
@@ -48,7 +48,7 @@ useReveal(root)
         </li>
       </ol>
 
-      <div data-reveal class="mt-4 grid gap-4 rounded-[var(--radius-bubble-lg)] bg-noir p-6 text-white sm:grid-cols-3 sm:p-8">
+      <div data-reveal class="mt-4 grid grid-cols-1 gap-4 rounded-[var(--radius-bubble-lg)] bg-noir p-6 text-white sm:grid-cols-3 sm:p-8">
         <div class="flex items-start gap-4">
           <FileText :size="22" class="mt-0.5 shrink-0 text-orange" aria-hidden="true" />
           <p><b class="block text-[16px]">Un PDF A4 prêt à envoyer</b><span class="text-[14.5px] text-white/70">Une ou deux pages, plus une version JPG pour les stories.</span></p>

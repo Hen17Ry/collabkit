@@ -22,7 +22,7 @@ useMotion(root, ({ gsap, reduce }) => {
       <h2 id="tournant" data-phrase class="mt-8 font-display text-[clamp(36px,6.4vw,82px)] leading-[1.03] font-bold tracking-[-.035em]">
         <template v-for="(w, i) in words" :key="i"><span data-w :class="key.has(w) ? 'italic text-[#F4B9C6]' : ''">{{ w }}</span>{{ ' ' }}</template>
       </h2>
-      <div class="mt-14 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-2">
+      <div class="mt-14 grid grid-cols-1 gap-10 border-t border-white/15 pt-10 md:grid-cols-2">
         <p data-after class="text-[18px] leading-relaxed text-white/80">
           Une marque ne dit pas oui à une créatrice qu'elle ne sait pas présenter. Le media kit, c'est ce qu'elle transfère en interne,
           ce qu'elle compare, ce qui justifie le budget. Sans lui, la conversation s'arrête toute seule.

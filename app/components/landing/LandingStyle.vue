@@ -23,7 +23,7 @@ useReveal(root)
 <template>
   <section ref="root" aria-labelledby="style-titre" class="relative overflow-hidden py-24 sm:py-32">
     <div class="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-transparent via-rose/60 to-transparent" aria-hidden="true" />
-    <div class="relative mx-auto grid max-w-[1240px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:gap-20">
+    <div class="relative mx-auto grid grid-cols-1 max-w-[1240px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:gap-20">
       <div class="order-2 lg:order-1">
         <div class="mx-auto w-full max-w-[430px]">
           <div class="relative">
@@ -75,7 +75,7 @@ useReveal(root)
               </button>
             </div>
           </fieldset>
-          <div class="grid gap-6 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <fieldset>
               <legend class="label">Fond du document</legend>
               <div class="flex flex-wrap gap-2">

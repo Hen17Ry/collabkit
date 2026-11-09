@@ -33,8 +33,8 @@ useMotion(root, ({ gsap, reduce }) => {
 
 <template>
   <section id="top" ref="root" class="relative overflow-hidden pt-28 pb-16 sm:pt-36 lg:pb-24">
-    <div class="mx-auto grid max-w-[1240px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] lg:gap-16">
-      <div>
+    <div class="mx-auto grid grid-cols-1 max-w-[1240px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] lg:gap-16">
+      <div class="min-w-0">
         <p data-h class="kicker flex items-center gap-3">
           <span class="h-px w-8 bg-bordeaux" aria-hidden="true" /> Le media kit, sans la page blanche
         </p>
@@ -54,7 +54,8 @@ useMotion(root, ({ gsap, reduce }) => {
           </NuxtLink>
           <a href="#histoire" class="btn btn-ghost">La suite de l'histoire <ArrowDown :size="16" aria-hidden="true" /></a>
         </div>
-        <p data-h class="mt-6 text-[11px] font-semibold uppercase tracking-[.14em] text-muted-strong">
+        <div data-h class="mt-5"><PromoBadge /></div>
+        <p data-h class="mt-4 text-[11px] font-semibold uppercase tracking-[.14em] text-muted-strong">
           4 écrans · une dizaine de minutes · PDF et JPG · tarifs en FCFA
         </p>
       </div>
