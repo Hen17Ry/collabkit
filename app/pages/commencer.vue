@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { toEur } from '~~/shared/pricing'
 import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle, Smartphone, CreditCard } from '@lucide/vue'
 
 useSeoMeta({ title: 'Créer mon media kit · Ton Media Kit', robots: 'noindex' })
 
 const cfg = useRuntimeConfig().public
-const { price, normalPrice, promo, promoEnd, priceEur } = useBrand()
+const { price, normalPrice, priceUsd, normalPriceUsd, promo, promoEnd } = useBrand()
 
 const form = reactive({ name: '', email: '', phone: '' })
-// « xof » : Mobile Money ou carte, en FCFA ; « eur » : carte uniquement, débitée en euros par la banque
-const currency = ref<'xof' | 'eur'>('xof')
 const errors = reactive<Record<string, string>>({})
 const state = ref<'idle' | 'creating' | 'redirecting'>('idle')
 const route = useRoute()
@@ -17,7 +14,7 @@ const message = ref(route.query.paiement === 'echec' ? 'Le paiement n\'a pas abo
 
 const busy = computed(() => state.value !== 'idle')
 const label = computed(() => ({
-  idle: currency.value === 'eur' ? `Payer ${eur(priceEur)} par carte` : `Payer ${fcfa(price)}`,
+  idle: `Payer ${usd(priceUsd)}`,
   creating: 'Préparation…',
   redirecting: 'Ouverture du paiement…'
 })[state.value])
@@ -25,7 +22,7 @@ const label = computed(() => ({
 function validate() {
   errors.name = form.name.trim().length < 2 ? 'Ton prénom, s\'il te plaît.' : ''
   errors.email = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim()) ? '' : 'Cette adresse email ne semble pas valide.'
-  errors.phone = currency.value === 'xof' && form.phone && form.phone.replace(/\D/g, '').length < 8 ? 'Numéro incomplet.' : ''
+  errors.phone = form.phone && form.phone.replace(/\D/g, '').length < 8 ? 'Numéro incomplet.' : ''
   return !errors.name && !errors.email && !errors.phone
 }
 
@@ -40,7 +37,7 @@ async function pay() {
   try {
     const order = await $fetch<{ orderId: string, checkoutUrl?: string, fake?: boolean }>('/api/orders', {
       method: 'POST',
-      body: { ...form, phone: currency.value === 'xof' ? form.phone : '', currency: currency.value }
+      body: { ...form }
     })
     state.value = 'redirecting'
     // au retour (ou en mode test), la page /paiement vérifie le paiement et ouvre le studio
@@ -51,7 +48,6 @@ async function pay() {
   }
 }
 
-const toEurUi = toEur
 const steps = ['Tes infos', 'Paiement', 'Ton studio']
 const current = computed(() => state.value === 'redirecting' ? 1 : 0)
 const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquables', 'Envoi par email', 'Modifications illimitées']
@@ -99,32 +95,21 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             <p id="h-email" class="mt-1.5 text-[13.5px] text-muted-strong">On t'y envoie ton lien d'accès, puis ton media kit en PDF.</p>
             <p v-if="errors.email" id="e-email" class="mt-1 text-[13.5px] font-semibold text-err">{{ errors.email }}</p>
           </div>
-          <fieldset>
-            <legend class="label">Tu paies</legend>
-            <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <label
-                v-for="o in ([
-                  { v: 'xof', t: 'En FCFA', d: 'Mobile Money (MTN, Moov, Orange, Wave…) ou carte', icon: Smartphone },
-                  { v: 'eur', t: 'En euros', d: 'Carte Visa ou Mastercard', icon: CreditCard }
-                ] as const)" :key="o.v"
-                class="relative flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border bg-white px-4 py-3 transition"
-                :class="currency === o.v ? 'border-bordeaux shadow-[0_0_0_3px_rgba(109,7,26,.1)]' : 'border-line hover:border-bordeaux/40'"
-              >
-                <input v-model="currency" type="radio" name="currency" :value="o.v" class="sr-only" :disabled="busy">
-                <span class="grid size-10 shrink-0 place-items-center rounded-full" :class="currency === o.v ? 'bg-bordeaux text-white' : 'bg-rose text-bordeaux'">
-                  <component :is="o.icon" :size="18" aria-hidden="true" />
-                </span>
-                <span class="leading-tight">
-                  <b class="block text-[15px]">{{ o.t }} · {{ o.v === 'eur' ? eur(priceEur) : fcfa(price) }}</b>
-                  <span class="text-[13px] text-muted-strong">{{ o.d }}</span>
-                </span>
-              </label>
-            </div>
-            <p v-if="currency === 'eur'" class="mt-2.5 text-[13.5px] leading-snug text-muted-strong">
-              Ta banque te débite {{ eur(priceEur) }}, l'équivalent exact de {{ fcfa(price) }} (parité fixe du franc CFA). Selon ta banque, de petits frais de paiement à l'étranger peuvent s'ajouter.
-            </p>
-          </fieldset>
-          <div v-if="currency === 'xof'">
+          <div class="rounded-2xl border border-line bg-white px-4 py-3.5">
+            <p class="label !mb-2.5">Tu paies comme tu veux</p>
+            <ul class="flex flex-col gap-2.5 text-[14.5px] leading-snug">
+              <li class="flex items-start gap-3">
+                <span class="grid size-8 shrink-0 place-items-center rounded-full bg-rose text-bordeaux"><Smartphone :size="16" aria-hidden="true" /></span>
+                <span><b>Mobile Money</b> (MTN, Moov, Orange, Wave…) : l'équivalent en FCFA est débité, environ {{ fcfa(price) }}.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="grid size-8 shrink-0 place-items-center rounded-full bg-rose text-bordeaux"><CreditCard :size="16" aria-hidden="true" /></span>
+                <span><b>Carte bancaire</b>, depuis n'importe quel pays : ta banque convertit dans ta devise (euros, FCFA…).</span>
+              </li>
+            </ul>
+            <p class="mt-3 border-t hairline pt-3 text-[13px] text-muted-strong">Montant facturé : <b class="text-ink">{{ usd(priceUsd) }}</b> (dollars US). Le moyen de paiement se choisit sur la page suivante.</p>
+          </div>
+          <div>
             <label for="f-phone" class="label">Ton numéro Mobile Money <span class="font-semibold normal-case tracking-normal text-muted">(facultatif)</span></label>
             <input id="f-phone" v-model="form.phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="+229 01 00 00 00 00" maxlength="24" :aria-invalid="!!errors.phone" aria-describedby="h-phone e-phone" :disabled="busy">
             <p id="h-phone" class="mt-1.5 text-[13.5px] text-muted-strong">Pour pré-remplir le paiement.</p>
@@ -141,7 +126,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             {{ label }}
           </button>
           <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[13px] text-muted-strong">
-            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par Moneroo · {{ currency === 'eur' ? 'carte bancaire' : 'Mobile Money ou carte' }}
+            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par Moneroo · Mobile Money ou carte
           </p>
           <p v-if="cfg.fakePayment" class="rounded-xl bg-orange/10 px-3 py-2 text-center text-[12.5px] font-semibold text-orange">Mode test : le paiement est simulé.</p>
         </form>
@@ -165,12 +150,12 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
           <div class="mt-6 flex items-baseline justify-between gap-3 border-t hairline pt-5">
             <span class="text-[15px] font-semibold">Total</span>
             <span class="text-right">
-              <s v-if="promo" class="mr-2 text-[15px] font-semibold text-muted-strong">{{ currency === 'eur' ? eur(toEurUi(normalPrice)) : fcfa(normalPrice) }}</s>
-              <span class="font-display text-[30px] font-bold">{{ currency === 'eur' ? eur(priceEur) : fcfa(price) }}</span>
+              <s v-if="promo" class="mr-2 text-[15px] font-semibold text-muted-strong">{{ usd(normalPriceUsd) }}</s>
+              <span class="font-display text-[30px] font-bold">{{ usd(priceUsd) }}</span>
             </span>
           </div>
           <p class="mt-1 text-right text-[12.5px] text-muted-strong">
-            Paiement unique, sans abonnement<template v-if="currency === 'eur'"> · soit {{ fcfa(price) }}</template>
+            soit environ {{ fcfa(price) }} · paiement unique, sans abonnement
           </p>
           <p v-if="promo" class="mt-4 rounded-2xl bg-orange/10 px-4 py-3 text-[13.5px] leading-snug text-[#8A3709]">
             <b>Prix de lancement</b> jusqu'au {{ promoEnd }}, au lieu de {{ fcfa(normalPrice) }}.

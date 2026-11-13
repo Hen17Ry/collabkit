@@ -4,12 +4,11 @@ import { z } from 'zod'
 const Body = z.object({
   name: z.string().trim().min(2, 'Ton prénom, s\'il te plaît').max(60),
   email: z.email('Cette adresse email ne semble pas valide').max(120).transform(s => s.trim().toLowerCase()),
-  phone: z.string().trim().max(24).optional().default(''),
-  currency: z.enum(['xof', 'eur']).optional().default('xof')
+  phone: z.string().trim().max(24).optional().default('')
 })
 
 /**
- * Crée la commande puis le paiement Moneroo, et renvoie l'adresse de paiement.
+ * Crée la commande puis le paiement Moneroo (facturé en dollars US), et renvoie l'adresse de paiement.
  * Le montant vient du serveur, jamais du navigateur.
  */
 export default defineEventHandler(async (event) => {
@@ -19,23 +18,25 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) {
     throw createError({ statusCode: 422, statusMessage: 'Formulaire incomplet', data: { issues: z.flattenError(parsed.error).fieldErrors } })
   }
-  // toujours en FCFA ; en « euros », la carte est débitée de l'équivalent exact par la banque
-  const amount = pricing(useRuntimeConfig().public).amount
-  const order: Order = { id: newId(), ...parsed.data, amount, status: 'pending', createdAt: Date.now() }
+  const p = pricing(useRuntimeConfig().public)
+  const order: Order = {
+    id: newId(), ...parsed.data, currency: 'usd',
+    amount: p.usd, chargeAmount: toApiAmount(p.usd), amountFcfa: p.amount,
+    status: 'pending', createdAt: Date.now()
+  }
   await saveOrder(order)
 
-  if (fakePaymentAllowed()) return { orderId: order.id, amount, fake: true }
+  if (fakePaymentAllowed()) return { orderId: order.id, fake: true }
 
   const site = useRuntimeConfig().public.siteUrl.replace(/\/$/, '')
   let pay
   try {
     pay = await initializePayment({
       orderId: order.id,
-      amount,
+      usd: p.usd,
       name: order.name,
       email: order.email,
-      phone: order.currency === 'xof' ? order.phone?.replace(/\D/g, '') || undefined : undefined,
-      cardOnly: order.currency === 'eur',
+      phone: order.phone?.replace(/\D/g, '') || undefined,
       returnUrl: `${site}/paiement?commande=${order.id}`
     })
   } catch (e: any) {
@@ -44,5 +45,5 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 502, statusMessage: 'Le paiement n\'a pas pu démarrer. Réessaie dans un instant.' })
   }
   await saveOrder({ ...order, paymentId: pay.paymentId })
-  return { orderId: order.id, amount, checkoutUrl: pay.checkoutUrl }
+  return { orderId: order.id, checkoutUrl: pay.checkoutUrl }
 })

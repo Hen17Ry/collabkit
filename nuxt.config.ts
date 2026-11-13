@@ -27,6 +27,8 @@ export default defineNuxtConfig({
     monerooSecretKey: '',
     monerooWebhookSecret: '',
     monerooApiBase: 'https://api.moneroo.io/v1',
+    // true si l'API attend les montants en centimes (6 $ = 600)
+    monerooMinorUnits: false,
     // envoi des emails par SMTP (Gmail : smtp.gmail.com, port 465, mot de passe d'application)
     smtpHost: '',
     smtpPort: 465,
@@ -38,6 +40,9 @@ export default defineNuxtConfig({
       // prix normal, et prix de lancement valable jusqu'à promoUntil (heure de Cotonou)
       priceFcfa: 5000,
       promoPriceFcfa: 3500,
+      // montants facturés en dollars US par Moneroo (arrondis au dollar supérieur des prix en FCFA)
+      priceUsd: 9,
+      promoPriceUsd: 6,
       promoUntil: '2027-01-01T00:00:00+01:00',
       // Paiement simulé : uniquement en développement, ignoré en production.
       fakePayment: false,

@@ -5,8 +5,13 @@ export type Order = {
   name: string
   email: string
   phone?: string
-  currency?: 'xof' | 'eur'
+  currency?: 'xof' | 'eur' | 'usd'
+  /** montant facturé (dollars US) */
   amount: number
+  /** même montant, dans l'unité envoyée à Moneroo */
+  chargeAmount?: number
+  /** prix affiché en FCFA au moment de la commande */
+  amountFcfa?: number
   status: 'pending' | 'paid'
   transactionId?: string
   paymentId?: string

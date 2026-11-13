@@ -14,7 +14,7 @@ Elle repart avec un PDF prêt à envoyer, liens cliquables inclus, tarifs en FCF
 ## Le parcours
 
 1. **Le site** (`/`) raconte l'histoire en chapitres : la marque qui écrit, les trois jours qui passent, le vrai problème, ce qu'une marque lit dans un media kit, la méthode, le style, le prix.
-2. **La commande** (`/commencer`) : prénom, email, choix de la devise, puis redirection vers la page de paiement **Moneroo**. En FCFA : Mobile Money (Bénin, Togo, Côte d'Ivoire, Sénégal…) ou carte. En euros : carte uniquement ; Moneroo encaisse en FCFA et la banque de la cliente débite l'équivalent exact en euros (parité fixe 1 € = 655,957 FCFA).
+2. **La commande** (`/commencer`) : prénom, email, puis redirection vers la page de paiement **Moneroo**. Le paiement est facturé en dollars US (6 $ au lancement, 9 $ ensuite) ; Moneroo convertit pour le Mobile Money (l'équivalent en FCFA est débité) et la carte bancaire marche depuis n'importe quel pays. Le site affiche le prix en FCFA (3 500 FCFA au lancement, 5 000 ensuite).
 3. **La vérification** : au retour (`/paiement`), le serveur revérifie le paiement auprès de Moneroo (statut, devise, montant, commande) avant d'ouvrir l'accès. Un webhook rattrape les paiements dont la page a été fermée trop tôt.
 4. **L'accès** : un email avec un lien personnel (lien magique) est envoyé. Il permet de revenir sur n'importe quel appareil. `/acces` renvoie ce lien si on l'a perdu.
 5. **Le studio** (`/studio`) : l'outil de Lys Sama, repris fidèlement. Le brouillon est enregistré sur l'appareil **et** dans le compte.
@@ -69,7 +69,7 @@ Pour tester tout le parcours sans Moneroo ni SMTP, mets `NUXT_PUBLIC_FAKE_PAYMEN
 2. **Emails (SMTP)** : renseigne `NUXT_SMTP_HOST`, `NUXT_SMTP_PORT`, `NUXT_SMTP_USER`, `NUXT_SMTP_PASS`.
    Avec Gmail : `smtp.gmail.com`, port `465`, et un mot de passe d'application (la validation en deux étapes doit être active). `NUXT_MAIL_FROM` est facultatif.
 3. **Upstash Redis** : dans Vercel > Storage, crée une base Upstash et connecte-la au projet (les variables `KV_REST_API_URL` / `KV_REST_API_TOKEN` sont ajoutées toutes seules). Depuis upstash.com, renseigne plutôt `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN`. Sans ça, les commandes ne sont pas conservées sur Vercel.
-4. Renseigne `NUXT_PUBLIC_SITE_URL` (sert aux liens des emails) et les prix : `NUXT_PUBLIC_PRICE_FCFA` (prix normal), `NUXT_PUBLIC_PROMO_PRICE_FCFA` et `NUXT_PUBLIC_PROMO_UNTIL` (prix de lancement et date de fin, appliqués automatiquement).
+4. Renseigne `NUXT_PUBLIC_SITE_URL` (sert aux liens des emails) et les prix : `NUXT_PUBLIC_PRICE_FCFA` / `NUXT_PUBLIC_PRICE_USD` (prix normal affiché / facturé), `NUXT_PUBLIC_PROMO_PRICE_FCFA` / `NUXT_PUBLIC_PROMO_PRICE_USD` et `NUXT_PUBLIC_PROMO_UNTIL` (prix de lancement et date de fin, appliqués automatiquement). Si Moneroo attend les montants en centimes, mets `NUXT_MONEROO_MINOR_UNITS=true`.
 5. Déploie (Vercel détecte Nuxt tout seul).
 
 ## Pistes
