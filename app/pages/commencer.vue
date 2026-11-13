@@ -11,17 +11,15 @@ const form = reactive({ name: '', email: '', phone: '' })
 // « xof » : Mobile Money ou carte, en FCFA ; « eur » : carte uniquement, débitée en euros par la banque
 const currency = ref<'xof' | 'eur'>('xof')
 const errors = reactive<Record<string, string>>({})
-const state = ref<'idle' | 'creating' | 'paying' | 'verifying' | 'done'>('idle')
-const message = ref('')
-const pending = ref<{ orderId: string, transactionId: string } | null>(null)
+const state = ref<'idle' | 'creating' | 'redirecting'>('idle')
+const route = useRoute()
+const message = ref(route.query.paiement === 'echec' ? 'Le paiement n\'a pas abouti. Tu peux réessayer, rien n\'a été débité.' : '')
 
 const busy = computed(() => state.value !== 'idle')
 const label = computed(() => ({
   idle: currency.value === 'eur' ? `Payer ${eur(priceEur)} par carte` : `Payer ${fcfa(price)}`,
   creating: 'Préparation…',
-  paying: 'Paiement en cours…',
-  verifying: 'Vérification du paiement…',
-  done: 'Ouverture de ton studio…'
+  redirecting: 'Ouverture du paiement…'
 })[state.value])
 
 function validate() {
@@ -31,22 +29,7 @@ function validate() {
   return !errors.name && !errors.email && !errors.phone
 }
 
-async function confirm(orderId: string, transactionId: string) {
-  state.value = 'verifying'
-  pending.value = { orderId, transactionId }
-  try {
-    await $fetch('/api/orders/confirm', { method: 'POST', body: { orderId, transactionId } })
-    state.value = 'done'
-    sessionStorage.removeItem('ck_pending')
-    window.location.href = '/studio'
-  } catch (e: any) {
-    state.value = 'idle'
-    sessionStorage.setItem('ck_pending', JSON.stringify({ orderId, transactionId }))
-    message.value = (e?.data?.statusMessage || e?.statusMessage || 'Vérification impossible')
-      + '. Ton paiement n\'est pas perdu : réessaie la vérification, ou écris-nous sur WhatsApp.'
-  }
-}
-
+/** Crée la commande, puis envoie vers la page de paiement sécurisée Moneroo. */
 async function pay() {
   message.value = ''
   if (!validate()) {
@@ -54,63 +37,23 @@ async function pay() {
     return
   }
   state.value = 'creating'
-  let order: { orderId: string, amount: number }
   try {
-    order = await $fetch('/api/orders', { method: 'POST', body: { ...form, phone: currency.value === 'xof' ? form.phone : '', currency: currency.value } })
+    const order = await $fetch<{ orderId: string, checkoutUrl?: string, fake?: boolean }>('/api/orders', {
+      method: 'POST',
+      body: { ...form, phone: currency.value === 'xof' ? form.phone : '', currency: currency.value }
+    })
+    state.value = 'redirecting'
+    // au retour (ou en mode test), la page /paiement vérifie le paiement et ouvre le studio
+    window.location.href = order.checkoutUrl || `/paiement?commande=${order.orderId}`
   } catch (e: any) {
     state.value = 'idle'
-    message.value = e?.data?.statusMessage || 'Impossible de préparer la commande. Vérifie ta connexion.'
-    return
+    message.value = e?.data?.statusMessage || 'Impossible de préparer le paiement. Vérifie ta connexion.'
   }
-
-  if (cfg.fakePayment) return confirm(order.orderId, 'dev-' + order.orderId)
-
-  if (!cfg.kkiapayPublicKey) {
-    state.value = 'idle'
-    message.value = 'Le paiement n\'est pas encore configuré sur ce site.'
-    return
-  }
-
-  state.value = 'paying'
-  const k = await import('kkiapay')
-  k.removeKkiapayListener('success')
-  k.removeKkiapayListener('failed')
-  k.addSuccessListener((r: { transactionId: string }) => confirm(order.orderId, r.transactionId))
-  k.addFailedListener(() => { state.value = 'idle'; message.value = 'Le paiement n\'a pas abouti. Tu peux réessayer.' })
-  k.addKkiapayCloseListener(() => { if (state.value === 'paying') state.value = 'idle' })
-  k.openKkiapayWidget({
-    amount: order.amount,
-    key: cfg.kkiapayPublicKey,
-    sandbox: !!cfg.kkiapaySandbox,
-    name: form.name.trim(),
-    email: form.email.trim(),
-    phone: (currency.value === 'xof' && form.phone.replace(/\D/g, '')) || undefined,
-    reason: 'Ton Media Kit',
-    // en euros : seulement la carte bancaire, quel que soit le pays
-    ...(currency.value === 'eur' ? { paymentMethods: ['card'] as any } : {}),
-    data: JSON.stringify({ orderId: order.orderId })
-  })
 }
-
-onMounted(() => {
-  try {
-    const p = JSON.parse(sessionStorage.getItem('ck_pending') || 'null')
-    if (p?.orderId && p?.transactionId) {
-      pending.value = p
-      message.value = 'Un paiement attend encore sa vérification.'
-    }
-  } catch {}
-})
-onBeforeUnmount(async () => {
-  if (!import.meta.client) return
-  const k = await import('kkiapay').catch(() => null)
-  k?.removeKkiapayListener('success')
-  k?.removeKkiapayListener('failed')
-})
 
 const toEurUi = toEur
 const steps = ['Tes infos', 'Paiement', 'Ton studio']
-const current = computed(() => state.value === 'idle' || state.value === 'creating' ? 0 : state.value === 'paying' ? 1 : 2)
+const current = computed(() => state.value === 'redirecting' ? 1 : 0)
 const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquables', 'Envoi par email', 'Modifications illimitées']
 </script>
 
@@ -161,7 +104,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               <label
                 v-for="o in ([
-                  { v: 'xof', t: 'En FCFA', d: 'Mobile Money ou carte', icon: Smartphone },
+                  { v: 'xof', t: 'En FCFA', d: 'Mobile Money (MTN, Moov, Orange, Wave…) ou carte', icon: Smartphone },
                   { v: 'eur', t: 'En euros', d: 'Carte Visa ou Mastercard', icon: CreditCard }
                 ] as const)" :key="o.v"
                 class="relative flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border bg-white px-4 py-3 transition"
@@ -190,9 +133,6 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
 
           <div v-if="message" role="alert" class="rounded-2xl border border-err/20 bg-err/[.06] px-4 py-3 text-[14.5px] leading-snug text-err">
             {{ message }}
-            <button v-if="pending && state === 'idle'" type="button" class="mt-2 block cursor-pointer font-bold underline underline-offset-4" @click="confirm(pending.orderId, pending.transactionId)">
-              Réessayer la vérification
-            </button>
           </div>
 
           <button type="submit" class="btn btn-main mt-1 w-full !min-h-14 !text-[16px]" :disabled="busy" :aria-busy="busy">
@@ -201,7 +141,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             {{ label }}
           </button>
           <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[13px] text-muted-strong">
-            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par KKiaPay · {{ currency === 'eur' ? 'carte bancaire' : 'Mobile Money ou carte' }}
+            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par Moneroo · {{ currency === 'eur' ? 'carte bancaire' : 'Mobile Money ou carte' }}
           </p>
           <p v-if="cfg.fakePayment" class="rounded-xl bg-orange/10 px-3 py-2 text-center text-[12.5px] font-semibold text-orange">Mode test : le paiement est simulé.</p>
         </form>

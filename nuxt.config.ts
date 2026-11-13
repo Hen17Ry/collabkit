@@ -23,9 +23,10 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    kkiapayPrivateKey: '',
-    kkiapaySecretKey: '',
-    kkiapayWebhookSecret: '',
+    // Moneroo : clé secrète (sandbox ou production) et secret de signature des webhooks
+    monerooSecretKey: '',
+    monerooWebhookSecret: '',
+    monerooApiBase: 'https://api.moneroo.io/v1',
     // envoi des emails par SMTP (Gmail : smtp.gmail.com, port 465, mot de passe d'application)
     smtpHost: '',
     smtpPort: 465,
@@ -38,8 +39,6 @@ export default defineNuxtConfig({
       priceFcfa: 5000,
       promoPriceFcfa: 3500,
       promoUntil: '2027-01-01T00:00:00+01:00',
-      kkiapayPublicKey: '',
-      kkiapaySandbox: true,
       // Paiement simulé : uniquement en développement, ignoré en production.
       fakePayment: false,
       brand: {

@@ -1,43 +1,50 @@
 import { z } from 'zod'
 
-const Body = z.object({ orderId: z.string().min(6).max(40), transactionId: z.string().min(3).max(80) })
+const Body = z.object({ orderId: z.string().min(6).max(40), paymentId: z.string().min(3).max(80).optional() })
 
 /**
- * Appelé par la page de paiement quand KKiaPay signale un succès.
- * On revérifie la transaction auprès de KKiaPay avant d'ouvrir l'accès.
+ * Appelé au retour de la page de paiement Moneroo.
+ * On revérifie le paiement auprès de Moneroo avant d'ouvrir l'accès.
  */
 export default defineEventHandler(async (event) => {
   const parsed = Body.safeParse(await readBody(event))
   if (!parsed.success) throw createError({ statusCode: 422, statusMessage: 'Requête invalide' })
-  const { orderId, transactionId } = parsed.data
+  const { orderId } = parsed.data
 
   const order = await getOrder(orderId)
   if (!order) throw createError({ statusCode: 404, statusMessage: 'Commande introuvable' })
 
-  if (order.status === 'paid') {
-    if (order.transactionId !== transactionId || !order.token) throw createError({ statusCode: 409, statusMessage: 'Commande déjà réglée' })
+  if (order.status === 'paid' && order.token) {
     setAccessCookie(event, order.token)
-    return { ok: true }
+    return { status: 'paid' }
   }
 
-  const owner = await txOwner(transactionId)
-  if (owner && owner !== orderId) throw createError({ statusCode: 409, statusMessage: 'Transaction déjà utilisée' })
-
-  const skip = (fakePaymentAllowed() && transactionId.startsWith('dev-')) || trustWidgetInSandbox()
-  if (trustWidgetInSandbox()) console.warn('[kkiapay] mode test sans clé privée : transaction non revérifiée', transactionId)
-  if (!skip) {
-    if (!canVerify()) throw createError({ statusCode: 503, statusMessage: 'Paiement en cours de configuration' })
-    let tx
-    try { tx = await verifyTransaction(transactionId) } catch (e) {
-      console.error('[kkiapay] vérification', e)
-      throw createError({ statusCode: 502, statusMessage: 'Vérification du paiement impossible pour le moment' })
-    }
-    if (tx.status !== 'SUCCESS') throw createError({ statusCode: 402, statusMessage: 'Paiement non confirmé' })
-    if (Number(tx.amount) < order.amount) throw createError({ statusCode: 402, statusMessage: 'Montant insuffisant' })
+  // en développement, paiement simulé
+  if (fakePaymentAllowed() && !order.paymentId) {
+    const { order: paid, created } = await grantAccess(order, 'dev-' + order.id)
+    setAccessCookie(event, paid.token!)
+    if (created) await notifyAccess(paid)
+    return { status: 'paid' }
   }
 
-  const { order: paid, created } = await grantAccess(order, transactionId)
+  // l'identifiant de paiement de la commande fait foi (celui de l'adresse de retour n'est qu'un indice)
+  const paymentId = order.paymentId || parsed.data.paymentId
+  if (!paymentId) throw createError({ statusCode: 409, statusMessage: 'Aucun paiement pour cette commande' })
+
+  let p
+  try { p = await verifyPayment(paymentId) } catch (e: any) {
+    console.error('[moneroo] vérification', e?.data || e)
+    throw createError({ statusCode: 502, statusMessage: 'Vérification du paiement impossible pour le moment' })
+  }
+
+  if (p.status === 'pending' || p.status === 'initiated') return { status: 'pending' }
+  if (!paymentMatches(p, order)) return { status: 'failed' }
+
+  const owner = await txOwner(p.id)
+  if (owner && owner !== order.id) throw createError({ statusCode: 409, statusMessage: 'Paiement déjà utilisé' })
+
+  const { order: paid, created } = await grantAccess(order, p.id)
   setAccessCookie(event, paid.token!)
   if (created) await notifyAccess(paid)
-  return { ok: true }
+  return { status: 'paid' }
 })

@@ -24,11 +24,11 @@ useReveal(root)
             Moins cher que <span class="italic text-bordeaux">la collaboration que tu rates.</span>
           </h2>
           <p data-reveal="2" class="mt-5 max-w-[32rem] text-[18px] leading-relaxed text-ink/75">
-            Un seul paiement, pas d'abonnement. Tu paies par Mobile Money ou par carte, et tu accèdes au studio tout de suite.
+            Un seul paiement, pas d'abonnement. Tu paies par Mobile Money, au Bénin comme dans le reste de la zone FCFA, ou par carte, et tu accèdes au studio tout de suite.
             Depuis l'étranger, tu paies en euros avec ta carte Visa ou Mastercard.
           </p>
           <div data-reveal="3" class="mt-8 flex flex-wrap gap-2">
-            <span v-for="m in ['MTN MoMo', 'Moov Money', 'Celtiis Cash', 'Carte bancaire', 'Euros, par carte']" :key="m" class="rounded-full border border-line bg-white/70 px-3.5 py-2 text-[13px] font-semibold">{{ m }}</span>
+            <span v-for="m in ['MTN MoMo', 'Moov Money', 'Orange Money', 'Wave', 'Carte bancaire', 'Euros, par carte']" :key="m" class="rounded-full border border-line bg-white/70 px-3.5 py-2 text-[13px] font-semibold">{{ m }}</span>
           </div>
         </div>
 
@@ -56,7 +56,7 @@ useReveal(root)
               Je crée mon media kit <ArrowRight :size="17" class="transition group-hover:translate-x-0.5" aria-hidden="true" />
             </NuxtLink>
             <p class="mt-4 flex items-center justify-center gap-2 text-[13px] text-muted-strong">
-              <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par KKiaPay
+              <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par Moneroo
             </p>
           </div>
         </div>

@@ -9,6 +9,7 @@ export type Order = {
   amount: number
   status: 'pending' | 'paid'
   transactionId?: string
+  paymentId?: string
   token?: string
   createdAt: number
   paidAt?: number

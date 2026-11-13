@@ -14,8 +14,8 @@ Elle repart avec un PDF prêt à envoyer, liens cliquables inclus, tarifs en FCF
 ## Le parcours
 
 1. **Le site** (`/`) raconte l'histoire en chapitres : la marque qui écrit, les trois jours qui passent, le vrai problème, ce qu'une marque lit dans un media kit, la méthode, le style, le prix.
-2. **La commande** (`/commencer`) : prénom, email, choix de la devise, puis paiement **KKiaPay**. En FCFA : Mobile Money ou carte. En euros : carte Visa/Mastercard uniquement ; KKiaPay encaisse en FCFA et la banque de la cliente débite l'équivalent exact en euros (parité fixe 1 € = 655,957 FCFA).
-3. **La vérification** : le serveur revérifie la transaction auprès de KKiaPay (statut et montant) avant d'ouvrir l'accès. Un webhook rattrape les paiements dont la page a été fermée trop tôt.
+2. **La commande** (`/commencer`) : prénom, email, choix de la devise, puis redirection vers la page de paiement **Moneroo**. En FCFA : Mobile Money (Bénin, Togo, Côte d'Ivoire, Sénégal…) ou carte. En euros : carte uniquement ; Moneroo encaisse en FCFA et la banque de la cliente débite l'équivalent exact en euros (parité fixe 1 € = 655,957 FCFA).
+3. **La vérification** : au retour (`/paiement`), le serveur revérifie le paiement auprès de Moneroo (statut, devise, montant, commande) avant d'ouvrir l'accès. Un webhook rattrape les paiements dont la page a été fermée trop tôt.
 4. **L'accès** : un email avec un lien personnel (lien magique) est envoyé. Il permet de revenir sur n'importe quel appareil. `/acces` renvoie ce lien si on l'a perdu.
 5. **Le studio** (`/studio`) : l'outil de Lys Sama, repris fidèlement. Le brouillon est enregistré sur l'appareil **et** dans le compte.
 6. **La fin** : « Recevoir par email » génère le PDF et l'envoie en pièce jointe (SMTP). Téléchargement PDF et JPG toujours possibles.
@@ -40,16 +40,16 @@ Le reste (les 4 écrans, les listes, l'aperçu A4, les 5 dispositions, les style
 
 ```
 app/
-  pages/            index (récit), commencer (paiement), acces (retrouver son lien)
+  pages/            index (récit), commencer (commande), paiement (retour Moneroo), acces (retrouver son lien)
   components/       sections du récit (landing/) et réplique du media kit (kit/KitMini.vue)
 server/
   api/orders/       création de commande, confirmation du paiement
-  api/kkiapay/      webhook KKiaPay
+  api/moneroo/      webhook Moneroo (signature HMAC vérifiée)
   api/access/       renvoi du lien d'accès
   api/studio/       brouillon, envoi du PDF par email
   routes/           /studio (servi seulement avec accès), /acces/:token (lien magique)
   studio/           l'outil de Lys Sama adapté à la plateforme
-  utils/            stockage, session, KKiaPay, emails
+  utils/            stockage, session, Moneroo, emails
 ```
 
 ## Démarrer
@@ -60,12 +60,12 @@ cp .env.example .env
 npm run dev
 ```
 
-Pour tester tout le parcours sans KKiaPay ni SMTP, mets `NUXT_PUBLIC_FAKE_PAYMENT=true` dans `.env` : le paiement est simulé (en développement uniquement, jamais en production) et les emails sont déposés dans `.data/outbox/` avec le PDF.
+Pour tester tout le parcours sans Moneroo ni SMTP, mets `NUXT_PUBLIC_FAKE_PAYMENT=true` dans `.env` : le paiement est simulé (en développement uniquement, jamais en production) et les emails sont déposés dans `.data/outbox/` avec le PDF.
 
 ## Mise en production
 
-1. **KKiaPay** : récupère les clés (publique, privée, secrète) dans le tableau de bord. Commence avec `NUXT_PUBLIC_KKIAPAY_SANDBOX=true`, puis passe à `false`.
-   Déclare le webhook `https://ton-domaine/api/kkiapay/webhook` avec un secret, et mets ce secret dans `NUXT_KKIAPAY_WEBHOOK_SECRET`.
+1. **Moneroo** : récupère la clé secrète (Développeurs > Clés API) et mets-la dans `NUXT_MONEROO_SECRET_KEY` (clé sandbox pour tester, clé de production ensuite).
+   Active les moyens de paiement voulus dans ton compte Moneroo. Déclare le webhook `https://ton-domaine/api/moneroo/webhook` avec un secret de signature, et mets ce secret dans `NUXT_MONEROO_WEBHOOK_SECRET`.
 2. **Emails (SMTP)** : renseigne `NUXT_SMTP_HOST`, `NUXT_SMTP_PORT`, `NUXT_SMTP_USER`, `NUXT_SMTP_PASS`.
    Avec Gmail : `smtp.gmail.com`, port `465`, et un mot de passe d'application (la validation en deux étapes doit être active). `NUXT_MAIL_FROM` est facultatif.
 3. **Upstash Redis** : dans Vercel > Storage, crée une base Upstash et connecte-la au projet (les variables `KV_REST_API_URL` / `KV_REST_API_TOKEN` sont ajoutées toutes seules). Depuis upstash.com, renseigne plutôt `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN`. Sans ça, les commandes ne sont pas conservées sur Vercel.
