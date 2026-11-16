@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle, Smartphone, CreditCard } from '@lucide/vue'
+import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle, Smartphone } from '@lucide/vue'
 
 useSeoMeta({ title: 'Créer mon media kit · Ton Media Kit', robots: 'noindex' })
 
 const cfg = useRuntimeConfig().public
-const { price, normalPrice, priceUsd, normalPriceUsd, promo, promoEnd } = useBrand()
+const { price, normalPrice, promo, promoEnd } = useBrand()
 
 const form = reactive({ name: '', email: '', phone: '' })
 const errors = reactive<Record<string, string>>({})
@@ -14,7 +14,7 @@ const message = ref(route.query.paiement === 'echec' ? 'Le paiement n\'a pas abo
 
 const busy = computed(() => state.value !== 'idle')
 const label = computed(() => ({
-  idle: `Payer ${usd(priceUsd)}`,
+  idle: `Payer ${fcfa(price)}`,
   creating: 'Préparation…',
   redirecting: 'Ouverture du paiement…'
 })[state.value])
@@ -26,7 +26,7 @@ function validate() {
   return !errors.name && !errors.email && !errors.phone
 }
 
-/** Crée la commande, puis envoie vers la page de paiement sécurisée Moneroo. */
+/** Crée la commande, puis envoie vers la page de paiement sécurisée SasPay. */
 async function pay() {
   message.value = ''
   if (!validate()) {
@@ -96,18 +96,12 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             <p v-if="errors.email" id="e-email" class="mt-1 text-[13.5px] font-semibold text-err">{{ errors.email }}</p>
           </div>
           <div class="rounded-2xl border border-line bg-white px-4 py-3.5">
-            <p class="label !mb-2.5">Tu paies comme tu veux</p>
-            <ul class="flex flex-col gap-2.5 text-[14.5px] leading-snug">
-              <li class="flex items-start gap-3">
-                <span class="grid size-8 shrink-0 place-items-center rounded-full bg-rose text-bordeaux"><Smartphone :size="16" aria-hidden="true" /></span>
-                <span><b>Mobile Money</b> (MTN, Moov, Orange, Wave…) : l'équivalent en FCFA est débité, environ {{ fcfa(price) }}.</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="grid size-8 shrink-0 place-items-center rounded-full bg-rose text-bordeaux"><CreditCard :size="16" aria-hidden="true" /></span>
-                <span><b>Carte bancaire</b>, depuis n'importe quel pays : ta banque convertit dans ta devise (euros, FCFA…).</span>
-              </li>
-            </ul>
-            <p class="mt-3 border-t hairline pt-3 text-[13px] text-muted-strong">Montant facturé : <b class="text-ink">{{ usd(priceUsd) }}</b> (dollars US). Le moyen de paiement se choisit sur la page suivante.</p>
+            <p class="label !mb-2.5">Comment tu paies</p>
+            <div class="flex items-start gap-3 text-[14.5px] leading-snug">
+              <span class="grid size-8 shrink-0 place-items-center rounded-full bg-rose text-bordeaux"><Smartphone :size="16" aria-hidden="true" /></span>
+              <span><b>Mobile Money</b> : MTN, Moov, Celtiis, Orange, Wave, Free Money… Tu choisis ton réseau sur la page suivante et tu confirmes sur ton téléphone.</span>
+            </div>
+            <p class="mt-3 border-t hairline pt-3 text-[13px] text-muted-strong">Montant débité : <b class="text-ink">{{ fcfa(price) }}</b>, en une fois.</p>
           </div>
           <div>
             <label for="f-phone" class="label">Ton numéro Mobile Money <span class="font-semibold normal-case tracking-normal text-muted">(facultatif)</span></label>
@@ -126,7 +120,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             {{ label }}
           </button>
           <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[13px] text-muted-strong">
-            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par Moneroo · Mobile Money ou carte
+            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par SasPay · Mobile Money
           </p>
           <p v-if="cfg.fakePayment" class="rounded-xl bg-orange/10 px-3 py-2 text-center text-[12.5px] font-semibold text-orange">Mode test : le paiement est simulé.</p>
         </form>
@@ -150,12 +144,12 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
           <div class="mt-6 flex items-baseline justify-between gap-3 border-t hairline pt-5">
             <span class="text-[15px] font-semibold">Total</span>
             <span class="text-right">
-              <s v-if="promo" class="mr-2 text-[15px] font-semibold text-muted-strong">{{ usd(normalPriceUsd) }}</s>
-              <span class="font-display text-[30px] font-bold">{{ usd(priceUsd) }}</span>
+              <s v-if="promo" class="mr-2 text-[15px] font-semibold text-muted-strong">{{ fcfa(normalPrice) }}</s>
+              <span class="font-display text-[30px] font-bold">{{ fcfa(price) }}</span>
             </span>
           </div>
           <p class="mt-1 text-right text-[12.5px] text-muted-strong">
-            soit environ {{ fcfa(price) }} · paiement unique, sans abonnement
+            Paiement unique, sans abonnement
           </p>
           <p v-if="promo" class="mt-4 rounded-2xl bg-orange/10 px-4 py-3 text-[13.5px] leading-snug text-[#8A3709]">
             <b>Prix de lancement</b> jusqu'au {{ promoEnd }}, au lieu de {{ fcfa(normalPrice) }}.

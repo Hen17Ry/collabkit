@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowRight, Check, ShieldCheck } from '@lucide/vue'
 
-const { price, normalPrice, promo, promoEnd, priceUsd } = useBrand()
+const { price, normalPrice, promo, promoEnd } = useBrand()
 const included = [
   'Le studio complet : 4 écrans, aperçu A4 en direct',
   'Ton media kit en PDF (1 ou 2 pages) et en JPG',
@@ -24,11 +24,10 @@ useReveal(root)
             Moins cher que <span class="italic text-bordeaux">la collaboration que tu rates.</span>
           </h2>
           <p data-reveal="2" class="mt-5 max-w-[32rem] text-[18px] leading-relaxed text-ink/75">
-            Un seul paiement, pas d'abonnement. Tu paies par Mobile Money, au Bénin comme dans le reste de la zone FCFA, ou par carte, et tu accèdes au studio tout de suite.
-            Depuis l'étranger, tu paies par carte : ta banque convertit dans ta devise.
+            Un seul paiement, pas d'abonnement. Tu paies par Mobile Money, au Bénin comme dans le reste de la zone FCFA, et tu accèdes au studio tout de suite.
           </p>
           <div data-reveal="3" class="mt-8 flex flex-wrap gap-2">
-            <span v-for="m in ['MTN MoMo', 'Moov Money', 'Orange Money', 'Wave', 'Carte bancaire', 'Carte depuis l\'étranger']" :key="m" class="rounded-full border border-line bg-white/70 px-3.5 py-2 text-[13px] font-semibold">{{ m }}</span>
+            <span v-for="m in ['MTN MoMo', 'Moov Money', 'Celtiis Cash', 'Orange Money', 'Wave', 'Free Money']" :key="m" class="rounded-full border border-line bg-white/70 px-3.5 py-2 text-[13px] font-semibold">{{ m }}</span>
           </div>
         </div>
 
@@ -40,7 +39,6 @@ useReveal(root)
                 <p class="text-[11px] font-bold uppercase tracking-[.14em] text-muted-strong">Ton Media Kit · accès complet</p>
                 <p v-if="promo" class="mt-3 text-[17px] font-semibold text-muted-strong"><s class="decoration-bordeaux/60 decoration-2">{{ fcfa(normalPrice) }}</s></p>
                 <p class="mt-1 font-display text-[clamp(48px,6vw,72px)] leading-none font-bold tracking-[-.03em] text-noir">{{ fcfa(price).replace(/\s*FCFA$/, '') }}<span class="ml-2 font-sans text-[18px] font-bold tracking-normal text-muted-strong">FCFA</span></p>
-                <p class="mt-2 text-[14px] font-semibold text-muted-strong">facturé {{ usd(priceUsd) }} (dollars US)</p>
               </div>
               <span class="rounded-full bg-rose px-3 py-1.5 text-[12px] font-bold text-bordeaux">Paiement unique</span>
             </div>
@@ -56,7 +54,7 @@ useReveal(root)
               Je crée mon media kit <ArrowRight :size="17" class="transition group-hover:translate-x-0.5" aria-hidden="true" />
             </NuxtLink>
             <p class="mt-4 flex items-center justify-center gap-2 text-[13px] text-muted-strong">
-              <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par Moneroo
+              <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par SasPay
             </p>
           </div>
         </div>

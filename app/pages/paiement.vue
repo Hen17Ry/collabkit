@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { LoaderCircle, CircleX, Clock, ArrowRight } from '@lucide/vue'
 
-// Retour de la page de paiement Moneroo : on vérifie le paiement puis on ouvre le studio.
+// Retour de la page de paiement SasPay : on vérifie le paiement puis on ouvre le studio.
 useSeoMeta({ title: 'Paiement · Ton Media Kit', robots: 'noindex' })
 
 const route = useRoute()
 const { waHref } = useBrand()
 const orderId = String(route.query.commande || '')
-const paymentId = String(route.query.paymentId || '')
 
 const state = ref<'checking' | 'pending' | 'failed' | 'error'>('checking')
 const error = ref('')
@@ -18,7 +17,7 @@ async function check() {
   if (!orderId) { state.value = 'error'; error.value = 'Lien de paiement incomplet.'; return }
   try {
     const r = await $fetch<{ status: 'paid' | 'pending' | 'failed' }>('/api/orders/confirm', {
-      method: 'POST', body: { orderId, ...(paymentId ? { paymentId } : {}) }
+      method: 'POST', body: { orderId }
     })
     if (r.status === 'paid') { window.location.replace('/studio'); return }
     if (r.status === 'failed') { state.value = 'failed'; return }

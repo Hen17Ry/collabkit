@@ -18,8 +18,6 @@ export function useBrand() {
     brand: c.brand,
     price: p.amount,
     normalPrice: p.normal,
-    priceUsd: p.usd,
-    normalPriceUsd: p.normalUsd,
     promo: p.promo,
     promoEnd,
     waHref

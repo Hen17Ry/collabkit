@@ -8,7 +8,7 @@ const Body = z.object({
 })
 
 /**
- * Crée la commande puis le paiement Moneroo (facturé en dollars US), et renvoie l'adresse de paiement.
+ * Crée la commande puis la session de paiement SasPay (en FCFA), et renvoie l'adresse de paiement.
  * Le montant vient du serveur, jamais du navigateur.
  */
 export default defineEventHandler(async (event) => {
@@ -20,8 +20,7 @@ export default defineEventHandler(async (event) => {
   }
   const p = pricing(useRuntimeConfig().public)
   const order: Order = {
-    id: newId(), ...parsed.data, currency: 'usd',
-    amount: p.usd, chargeAmount: toApiAmount(p.usd), amountFcfa: p.amount,
+    id: newId(), ...parsed.data, amount: p.amount,
     status: 'pending', createdAt: Date.now()
   }
   await saveOrder(order)
@@ -31,19 +30,20 @@ export default defineEventHandler(async (event) => {
   const site = useRuntimeConfig().public.siteUrl.replace(/\/$/, '')
   let pay
   try {
-    pay = await initializePayment({
+    pay = await createCheckout({
       orderId: order.id,
-      usd: p.usd,
+      amount: p.amount,
       name: order.name,
       email: order.email,
-      phone: order.phone?.replace(/\D/g, '') || undefined,
+      phone: order.phone?.replace(/[^\d+]/g, '') || undefined,
       returnUrl: `${site}/paiement?commande=${order.id}`
     })
   } catch (e: any) {
     if (e?.statusCode === 503) throw e
-    console.error('[moneroo] initialisation', e?.data || e)
+    console.error('[saspay] création de session', e?.data || e)
     throw createError({ statusCode: 502, statusMessage: 'Le paiement n\'a pas pu démarrer. Réessaie dans un instant.' })
   }
-  await saveOrder({ ...order, paymentId: pay.paymentId })
+  await saveOrder({ ...order, paymentId: pay.sessionId })
+  await addPending(order.id)
   return { orderId: order.id, checkoutUrl: pay.checkoutUrl }
 })

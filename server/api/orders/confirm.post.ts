@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
-const Body = z.object({ orderId: z.string().min(6).max(40), paymentId: z.string().min(3).max(80).optional() })
+const Body = z.object({ orderId: z.string().min(6).max(40) })
 
 /**
- * Appelé au retour de la page de paiement Moneroo.
- * On revérifie le paiement auprès de Moneroo avant d'ouvrir l'accès.
+ * Appelé au retour de la page de paiement SasPay (et en boucle tant que le paiement n'est pas confirmé).
+ * On revérifie la session auprès de SasPay avant d'ouvrir l'accès.
  */
 export default defineEventHandler(async (event) => {
   const parsed = Body.safeParse(await readBody(event))
@@ -27,23 +27,20 @@ export default defineEventHandler(async (event) => {
     return { status: 'paid' }
   }
 
-  // l'identifiant de paiement de la commande fait foi (celui de l'adresse de retour n'est qu'un indice)
-  const paymentId = order.paymentId || parsed.data.paymentId
-  if (!paymentId) throw createError({ statusCode: 409, statusMessage: 'Aucun paiement pour cette commande' })
+  if (!order.paymentId) throw createError({ statusCode: 409, statusMessage: 'Aucun paiement pour cette commande' })
 
-  let p
-  try { p = await verifyPayment(paymentId) } catch (e: any) {
-    console.error('[moneroo] vérification', e?.data || e)
+  let r
+  try { r = await checkOrderPayment(order) } catch (e: any) {
+    console.error('[saspay] vérification', e?.data || e)
     throw createError({ statusCode: 502, statusMessage: 'Vérification du paiement impossible pour le moment' })
   }
+  if (r.state !== 'paid') return { status: r.state }
 
-  if (p.status === 'pending' || p.status === 'initiated') return { status: 'pending' }
-  if (!paymentMatches(p, order)) return { status: 'failed' }
-
-  const owner = await txOwner(p.id)
+  const tx = r.transactionId!
+  const owner = await txOwner(tx)
   if (owner && owner !== order.id) throw createError({ statusCode: 409, statusMessage: 'Paiement déjà utilisé' })
 
-  const { order: paid, created } = await grantAccess(order, p.id)
+  const { order: paid, created } = await grantAccess(order, tx)
   setAccessCookie(event, paid.token!)
   if (created) await notifyAccess(paid)
   return { status: 'paid' }

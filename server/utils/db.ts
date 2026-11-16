@@ -5,15 +5,11 @@ export type Order = {
   name: string
   email: string
   phone?: string
-  currency?: 'xof' | 'eur' | 'usd'
-  /** montant facturé (dollars US) */
+  /** montant facturé, en FCFA */
   amount: number
-  /** même montant, dans l'unité envoyée à Moneroo */
-  chargeAmount?: number
-  /** prix affiché en FCFA au moment de la commande */
-  amountFcfa?: number
   status: 'pending' | 'paid'
   transactionId?: string
+  /** identifiant de la session de paiement SasPay */
   paymentId?: string
   token?: string
   createdAt: number
@@ -47,7 +43,23 @@ export async function grantAccess(order: Order, transactionId: string) {
   await db().setItem(k, [...list, token])
   const paid: Order = { ...order, status: 'paid', transactionId, token, paidAt: Date.now() }
   await saveOrder(paid)
+  await removePending(order.id)
   return { order: paid, created: true }
+}
+
+/** Commandes en attente de paiement (48 h max), pour les rapprocher quand SasPay signale un paiement. */
+const PENDING = 'pending:orders'
+const PENDING_TTL = 48 * 3600_000
+export async function addPending(id: string) {
+  const list = ((await db().getItem<{ id: string, at: number }[]>(PENDING)) || []).filter(x => Date.now() - x.at < PENDING_TTL && x.id !== id)
+  await db().setItem(PENDING, [...list.slice(-199), { id, at: Date.now() }])
+}
+export async function listPending() {
+  return ((await db().getItem<{ id: string, at: number }[]>(PENDING)) || []).filter(x => Date.now() - x.at < PENDING_TTL).map(x => x.id)
+}
+export async function removePending(id: string) {
+  const list = (await db().getItem<{ id: string, at: number }[]>(PENDING)) || []
+  await db().setItem(PENDING, list.filter(x => x.id !== id))
 }
 
 export const txOwner = (transactionId: string) => db().getItem<string>(`tx:${transactionId}`)
