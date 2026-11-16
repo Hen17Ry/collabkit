@@ -1,8 +1,9 @@
 /**
- * Webhook SasPay (à déclarer dans le tableau de bord SasPay > Webhooks, évènement transaction.success).
+ * Webhook SasPay (tableau de bord SasPay > Webhooks, évènement transaction.success).
  * Filet de sécurité si la personne ferme la page avant le retour sur le site.
- * La notification ne dit pas à quelle commande elle correspond : on revérifie auprès de SasPay
- * les commandes en attente du même montant, et on n'ouvre que celles dont la session est payée.
+ * Carte : l'identifiant de la transaction est celui du paiement, on retrouve la commande directement.
+ * Mobile Money : la notification ne cite pas la session, on revérifie auprès de SasPay
+ * les commandes en attente du même montant, et on n'ouvre que celles qui sont payées.
  */
 export default defineEventHandler(async (event) => {
   const raw = (await readRawBody(event, 'utf8')) || ''
@@ -13,12 +14,22 @@ export default defineEventHandler(async (event) => {
   try { body = JSON.parse(raw) } catch { throw createError({ statusCode: 400, statusMessage: 'Corps invalide' }) }
   if (body?.event !== 'transaction.success') return { ok: true }
 
-  const amount = Number(body?.data?.amount)
+  const data = body.data || {}
+  const amount = Number(data.amount)
+  const currency = String(data.currency || '').toUpperCase()
+  const direct = data.id ? await orderForPayment(String(data.id)) : null
+  const pending = (await listPending()).slice(-30).reverse()
+  const candidates = direct ? [direct] : pending
+
   let opened = 0
-  for (const id of (await listPending()).slice(-30).reverse()) {
+  for (const id of candidates) {
     const order = await getOrder(id)
     if (!order || order.status === 'paid' || !order.paymentId) { await removePending(id); continue }
-    if (Number.isFinite(amount) && amount > 0 && amount < order.amount) continue
+    if (!direct) {
+      if (order.method === 'card') continue
+      if (currency && currency !== 'XOF') continue
+      if (Number.isFinite(amount) && amount > 0 && amount < order.amount) continue
+    }
     try {
       const r = await checkOrderPayment(order)
       if (r.state === 'failed') { await removePending(id); continue }

@@ -27,6 +27,8 @@ export default defineNuxtConfig({
     saspaySecretKey: '',
     saspayWebhookSecret: '',
     saspayApiBase: 'https://api.saspay.me/api/v1',
+    // pays envoyé pour les paiements par carte (ignoré par SasPay, mais obligatoire)
+    saspayCardCountry: 'BJ',
     // envoi des emails par SMTP (Gmail : smtp.gmail.com, port 465, mot de passe d'application)
     smtpHost: '',
     smtpPort: 465,
@@ -38,6 +40,9 @@ export default defineNuxtConfig({
       // prix normal, et prix de lancement valable jusqu'à promoUntil (heure de Cotonou)
       priceFcfa: 5000,
       promoPriceFcfa: 3500,
+      // carte bancaire : SasPay facture en dollars US (normal et lancement)
+      priceUsd: 9,
+      promoPriceUsd: 6,
       promoUntil: '2027-01-01T00:00:00+01:00',
       // Paiement simulé : uniquement en développement, ignoré en production.
       fakePayment: false,

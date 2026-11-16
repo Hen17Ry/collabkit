@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle, Smartphone } from '@lucide/vue'
+import { ArrowLeft, Check, Lock, ShieldCheck, LoaderCircle, Smartphone, CreditCard } from '@lucide/vue'
 
 useSeoMeta({ title: 'Créer mon media kit · Ton Media Kit', robots: 'noindex' })
 
 const cfg = useRuntimeConfig().public
-const { price, normalPrice, promo, promoEnd } = useBrand()
+const { price, normalPrice, priceUsd, normalPriceUsd, promo, promoEnd } = useBrand()
 
-const form = reactive({ name: '', email: '', phone: '' })
+const form = reactive({ name: '', email: '', phone: '', method: 'momo' as 'momo' | 'card' })
+const card = computed(() => form.method === 'card')
+const methods = computed(() => [
+  { id: 'momo' as const, icon: Smartphone, title: 'Mobile Money', text: 'MTN, Moov, Celtiis, Orange, Wave, Free Money…', price: fcfa(price) },
+  { id: 'card' as const, icon: CreditCard, title: 'Carte bancaire', text: 'Visa, Mastercard, depuis n\'importe quel pays.', price: usd(priceUsd) }
+])
+const total = computed(() => card.value ? usd(priceUsd) : fcfa(price))
+const totalBefore = computed(() => card.value ? usd(normalPriceUsd) : fcfa(normalPrice))
 const errors = reactive<Record<string, string>>({})
 const state = ref<'idle' | 'creating' | 'redirecting'>('idle')
 const route = useRoute()
@@ -14,7 +21,7 @@ const message = ref(route.query.paiement === 'echec' ? 'Le paiement n\'a pas abo
 
 const busy = computed(() => state.value !== 'idle')
 const label = computed(() => ({
-  idle: `Payer ${fcfa(price)}`,
+  idle: `Payer ${total.value}`,
   creating: 'Préparation…',
   redirecting: 'Ouverture du paiement…'
 })[state.value])
@@ -22,7 +29,8 @@ const label = computed(() => ({
 function validate() {
   errors.name = form.name.trim().length < 2 ? 'Ton prénom, s\'il te plaît.' : ''
   errors.email = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim()) ? '' : 'Cette adresse email ne semble pas valide.'
-  errors.phone = form.phone && form.phone.replace(/\D/g, '').length < 8 ? 'Numéro incomplet.' : ''
+  const digits = form.phone.replace(/\D/g, '').length
+  errors.phone = card.value && !digits ? 'Ton numéro est demandé pour payer par carte.' : digits && digits < 8 ? 'Numéro incomplet.' : ''
   return !errors.name && !errors.email && !errors.phone
 }
 
@@ -96,17 +104,32 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             <p v-if="errors.email" id="e-email" class="mt-1 text-[13.5px] font-semibold text-err">{{ errors.email }}</p>
           </div>
           <div class="rounded-2xl border border-line bg-white px-4 py-3.5">
-            <p class="label !mb-2.5">Comment tu paies</p>
-            <div class="flex items-start gap-3 text-[14.5px] leading-snug">
-              <span class="grid size-8 shrink-0 place-items-center rounded-full bg-rose text-bordeaux"><Smartphone :size="16" aria-hidden="true" /></span>
-              <span><b>Mobile Money</b> : MTN, Moov, Celtiis, Orange, Wave, Free Money… Tu choisis ton réseau sur la page suivante et tu confirmes sur ton téléphone.</span>
-            </div>
-            <p class="mt-3 border-t hairline pt-3 text-[13px] text-muted-strong">Montant débité : <b class="text-ink">{{ fcfa(price) }}</b>, en une fois.</p>
+            <fieldset>
+              <legend class="label !mb-2.5">Comment tu paies</legend>
+              <div class="flex flex-col gap-2">
+                <label
+                  v-for="m in methods" :key="m.id"
+                  class="flex cursor-pointer items-start gap-3 rounded-xl border border-line px-3 py-3 transition has-checked:border-bordeaux has-checked:bg-rose/60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-bordeaux"
+                >
+                  <input v-model="form.method" type="radio" name="method" :value="m.id" class="sr-only" :disabled="busy">
+                  <span class="grid size-8 shrink-0 place-items-center rounded-full bg-rose text-bordeaux"><component :is="m.icon" :size="16" aria-hidden="true" /></span>
+                  <span class="min-w-0 flex-1 text-[14.5px] leading-snug"><b>{{ m.title }}</b><span class="mt-0.5 block text-[13px] text-muted-strong">{{ m.text }}</span></span>
+                  <span class="shrink-0 pt-0.5 text-[14.5px] font-bold whitespace-nowrap">{{ m.price }}</span>
+                </label>
+              </div>
+            </fieldset>
+            <p class="mt-3 border-t hairline pt-3 text-[13px] text-muted-strong">
+              <template v-if="card">Montant facturé : <b class="text-ink">{{ total }}</b> (dollars US), soit environ {{ fcfa(price) }}.</template>
+              <template v-else>Tu choisis ton réseau sur la page suivante et tu confirmes sur ton téléphone. Montant débité : <b class="text-ink">{{ total }}</b>.</template>
+            </p>
           </div>
           <div>
-            <label for="f-phone" class="label">Ton numéro Mobile Money <span class="font-semibold normal-case tracking-normal text-muted">(facultatif)</span></label>
+            <label for="f-phone" class="label">
+              <template v-if="card">Ton numéro de téléphone</template>
+              <template v-else>Ton numéro Mobile Money <span class="font-semibold normal-case tracking-normal text-muted">(facultatif)</span></template>
+            </label>
             <input id="f-phone" v-model="form.phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="+229 01 00 00 00 00" maxlength="24" :aria-invalid="!!errors.phone" aria-describedby="h-phone e-phone" :disabled="busy">
-            <p id="h-phone" class="mt-1.5 text-[13.5px] text-muted-strong">Pour pré-remplir le paiement.</p>
+            <p id="h-phone" class="mt-1.5 text-[13.5px] text-muted-strong">{{ card ? 'Demandé par le service de paiement. Indicatif du pays si tu n\'es pas au Bénin.' : 'Pour pré-remplir le paiement.' }}</p>
             <p v-if="errors.phone" id="e-phone" class="mt-1 text-[13.5px] font-semibold text-err">{{ errors.phone }}</p>
           </div>
 
@@ -120,7 +143,7 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
             {{ label }}
           </button>
           <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[13px] text-muted-strong">
-            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par SasPay · Mobile Money
+            <ShieldCheck :size="15" class="text-ok" aria-hidden="true" /> Paiement sécurisé par SasPay · Mobile Money ou carte
           </p>
           <p v-if="cfg.fakePayment" class="rounded-xl bg-orange/10 px-3 py-2 text-center text-[12.5px] font-semibold text-orange">Mode test : le paiement est simulé.</p>
         </form>
@@ -144,15 +167,15 @@ const included = ['Le studio complet, 4 écrans', 'PDF A4 et JPG, liens cliquabl
           <div class="mt-6 flex items-baseline justify-between gap-3 border-t hairline pt-5">
             <span class="text-[15px] font-semibold">Total</span>
             <span class="text-right">
-              <s v-if="promo" class="mr-2 text-[15px] font-semibold text-muted-strong">{{ fcfa(normalPrice) }}</s>
-              <span class="font-display text-[30px] font-bold">{{ fcfa(price) }}</span>
+              <s v-if="promo" class="mr-2 text-[15px] font-semibold text-muted-strong">{{ totalBefore }}</s>
+              <span class="font-display text-[30px] font-bold">{{ total }}</span>
             </span>
           </div>
           <p class="mt-1 text-right text-[12.5px] text-muted-strong">
-            Paiement unique, sans abonnement
+            {{ card ? `soit environ ${fcfa(price)} · ` : '' }}Paiement unique, sans abonnement
           </p>
           <p v-if="promo" class="mt-4 rounded-2xl bg-orange/10 px-4 py-3 text-[13.5px] leading-snug text-[#8A3709]">
-            <b>Prix de lancement</b> jusqu'au {{ promoEnd }}, au lieu de {{ fcfa(normalPrice) }}.
+            <b>Prix de lancement</b> jusqu'au {{ promoEnd }}, au lieu de {{ totalBefore }}.
           </p>
         </div>
       </aside>

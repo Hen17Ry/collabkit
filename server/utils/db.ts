@@ -5,11 +5,14 @@ export type Order = {
   name: string
   email: string
   phone?: string
-  /** montant facturé, en FCFA */
+  /** moyen de paiement : Mobile Money (FCFA) ou carte bancaire (dollars US) */
+  method?: 'momo' | 'card'
+  currency?: 'XOF' | 'USD'
+  /** montant facturé, dans la devise de la commande */
   amount: number
   status: 'pending' | 'paid'
   transactionId?: string
-  /** identifiant de la session de paiement SasPay */
+  /** identifiant SasPay : session de paiement (Mobile Money) ou paiement (carte) */
   paymentId?: string
   token?: string
   createdAt: number
@@ -61,6 +64,10 @@ export async function removePending(id: string) {
   const list = (await db().getItem<{ id: string, at: number }[]>(PENDING)) || []
   await db().setItem(PENDING, list.filter(x => x.id !== id))
 }
+
+/** Retrouver une commande à partir de l'identifiant de paiement SasPay (webhooks). */
+export const linkPayment = (paymentId: string, orderId: string) => db().setItem(`pay:${paymentId}`, orderId)
+export const orderForPayment = (paymentId: string) => db().getItem<string>(`pay:${paymentId}`)
 
 export const txOwner = (transactionId: string) => db().getItem<string>(`tx:${transactionId}`)
 export const tokensForEmail = async (email: string) => (await db().getItem<string[]>(`byemail:${emailKey(email)}`)) || []
